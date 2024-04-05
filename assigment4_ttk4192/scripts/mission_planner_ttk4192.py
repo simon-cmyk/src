@@ -613,6 +613,14 @@ def move_robot(task):
     print("Executing path following")
     turtlebot_move()
 
+def turn_robot(orientation):
+    print("Executing Make a turn")
+    time.sleep(1)
+
+    # Create publish for turn commands
+    velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    vel_msg = Twist()
+
 # Define list of global waypoints
 global WPNS
 WPNS = {'waypoint0': [0.30, 0.30, 0.0],
