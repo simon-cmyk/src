@@ -613,13 +613,61 @@ def move_robot(task):
     print("Executing path following")
     turtlebot_move()
 
-def turn_robot(orientation):
-    print("Executing Make a turn")
-    time.sleep(1)
+class turtle_turn():
+    def __init__(self, theta_sp):
+        rospy.on_shutdown(self.stop)
 
-    # Create publish for turn commands
-    velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-    vel_msg = Twist()
+        self.theta = 0.0
+        self.theta_sp = theta_sp
+        self.pid_theta = PID(0,0,0)  # initialization
+
+        self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
+        self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
+        self.vel = Twist()                                                     # vector3 linear, vector3 angular
+        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
+
+
+        self.turn_robot()
+        self.stop()
+        rospy.logwarn("Turning done.")
+
+    def turn_robot(self):
+        print("Executing Make a turn")
+        time.sleep(1)
+
+        # TODO: Turn robot
+        self.pid_theta.setPID(1, 0, 0)     # P control while steering
+        self.pid_theta.setPoint(self.theta_sp)
+        rospy.logwarn("### PID: set target theta = " + str(self.theta_sp) + " ###")
+
+        # Adjust orientation first
+        while not rospy.is_shutdown():
+            angular = self.pid_theta.update(self.theta)     # return calculated PID input
+            if abs(angular) > 0.2:                          # turtlebot has not adjusted angle yet
+                angular = angular/abs(angular)*0.2          # fixed input "magnitude" when angle error is large
+            if abs(angular) < 0.01:                         # angle is within tolerance
+                break
+            self.vel.linear.x = 0               
+            self.vel.angular.z = angular
+            self.vel_pub.publish(self.vel)                  # publish velocity commands to turtlebot3
+            self.rate.sleep()
+
+        self.stop()
+
+    def stop(self):
+        self.vel.linear.x = 0
+        self.vel.angular.z = 0
+        self.vel_pub.publish(self.vel)
+        rospy.sleep(1)
+
+    def odom_callback(self, msg):
+        # Get (x, y, theta) specification from odometry topic
+        quarternion = [msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,\
+                    msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
+        (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(quarternion)
+        self.theta = yaw
+
+
 
 # Define list of global waypoints
 global WPNS
@@ -667,9 +715,13 @@ if __name__ == '__main__':
         input_t=input("")
 
         rospy.init_node('turtlebot_move', anonymous=False)
+
+        turtle_turn(0.0)
+
+        
         
         # 5.0) Testing the GNC module         
-        move_robot_waypoint0_waypoint1()
+        # move_robot_waypoint0_waypoint1()
 
 
 	# 5.1) Starting the AI Planner
@@ -686,8 +738,8 @@ if __name__ == '__main__':
 
         # 5.3) Start mission execution 
         # convert string into functions and executing
-        print("")
-        print("Starting mission execution")
+        # print("")
+        # print("Starting mission execution")
         # Start simulations with battery = 100%
         # battery=100
         # task_finished=0
