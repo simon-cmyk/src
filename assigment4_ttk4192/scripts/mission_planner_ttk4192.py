@@ -328,8 +328,8 @@ class turtlebot_move():
     Path-following module
     """
     def __init__(self):
-        rospy.init_node('turtlebot_move', anonymous=False)
-        rospy.loginfo("Press CTRL + C to terminate")
+        # rospy.init_node('turtlebot_move', anonymous=False)
+        # rospy.loginfo("Press CTRL + C to terminate")
         rospy.on_shutdown(self.stop)
 
         self.x = 0.0
@@ -337,22 +337,22 @@ class turtlebot_move():
         self.theta = 0.0
         self.pid_theta = PID(0,0,0)  # initialization
 
-        self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer
-        self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # reading vehicle speed
-        self.vel = Twist()
-        self.rate = rospy.Rate(10)
-        self.counter = 0
-        self.trajectory = list()
+        self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
+        self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
+        self.vel = Twist()                                                     # vector3 linear, vector3 angular
+        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
+        self.counter = 0                                                       # store trajectory point only at specific counter values
+        self.trajectory = list()                                               # store history (trajectory driven by turtlebot3)
 
         # track a sequence of waypoints
-        for point in WAYPOINTS:
+        for point in WAYPOINTS:                                                # global list of wpns (xi,yi)
             self.move_to_point(point[0], point[1])
             rospy.sleep(1)
         self.stop()
         rospy.logwarn("Action done.")
 
         # plot trajectory
-        data = np.array(self.trajectory)
+        data = np.array(self.trajectory)                                       # visualize driven trajectory
         np.savetxt('trajectory.csv', data, fmt='%f', delimiter=',')
         plt.plot(data[:,0],data[:,1])
         plt.show()
@@ -364,9 +364,9 @@ class turtlebot_move():
 
         diff_x = x - self.x
         diff_y = y - self.y
-        direction_vector = np.array([diff_x, diff_y])
+        direction_vector = np.array([diff_x, diff_y])                            # vector towards new positions
         direction_vector = direction_vector/sqrt(diff_x*diff_x + diff_y*diff_y)  # normalization
-        theta = atan2(diff_y, diff_x)
+        theta = atan2(diff_y, diff_x)                                            # angle towards new point
 
         # We should adopt different parameters for different kinds of movement
         self.pid_theta.setPID(1, 0, 0)     # P control while steering
@@ -376,14 +376,14 @@ class turtlebot_move():
         
         # Adjust orientation first
         while not rospy.is_shutdown():
-            angular = self.pid_theta.update(self.theta)
-            if abs(angular) > 0.2:
-                angular = angular/abs(angular)*0.2
-            if abs(angular) < 0.01:
+            angular = self.pid_theta.update(self.theta)     # return calculated PID input
+            if abs(angular) > 0.2:                          # turtlebot has not adjusted angle yet
+                angular = angular/abs(angular)*0.2          # fixed input "magnitude" when angle error is large
+            if abs(angular) < 0.01:                         # angle is within tolerance
                 break
-            self.vel.linear.x = 0
+            self.vel.linear.x = 0               
             self.vel.angular.z = angular
-            self.vel_pub.publish(self.vel)
+            self.vel_pub.publish(self.vel)                  # publish velocity commands to turtlebot3
             self.rate.sleep()
 
         # Have a rest
@@ -401,16 +401,17 @@ class turtlebot_move():
                 linear = linear/abs(linear)*0.2
 
             angular = self.pid_theta.update(self.theta)
-            if abs(angular) > 0.2:
+            if abs(angular) > 0.2:                          # fixed input "magnitude" when angular error is large
                 angular = angular/abs(angular)*0.2
-
-            if abs(linear) < 0.01 and abs(angular) < 0.01:
+            if abs(linear) < 0.01 and abs(angular) < 0.01:  # position and angle are within tolerance
                 break
+
             self.vel.linear.x = 1.5*linear   # Here can adjust speed
             self.vel.angular.z = angular
-            self.vel_pub.publish(self.vel)
+            self.vel_pub.publish(self.vel)                  # publish velocity commands to turtlebot3
             self.rate.sleep()
         self.stop()
+
     def stop(self):
         self.vel.linear.x = 0
         self.vel.angular.z = 0
@@ -593,6 +594,45 @@ def charge_battery_waypoint0():
     print("chargin battert")
     time.sleep(5)
 
+def move_robot(task):
+    """
+    Created by MNK as a general move_action between input positions given as string literals
+    """
+    startpos = task.split('_')[2]
+    startpos = WPNS[startpos][0:2]
+    goalpos = task.split('_')[3]
+    goalpos = WPNS[goalpos][0:2]
+    print("Excuting move from (%2d,%2d) to (%2d,%2d)" % (startpos[0], startpos[1], goalpos[0], goalpos[1]))
+
+    # Get path from path planner
+    print('Computing path using A*')
+    # TODO: Add path planner
+    WAYPOINTS = [startpos,goalpos]
+
+    # Move robot using motion controller
+    print("Executing path following")
+    turtlebot_move()
+
+def turn_robot(orientation):
+    print("Executing Make a turn")
+    time.sleep(1)
+
+    # Create publish for turn commands
+    velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    vel_msg = Twist()
+
+# Define list of global waypoints
+global WPNS
+WPNS = {'waypoint0': [0.30, 0.30, 0.0],
+       'waypoint1': [1.80, 0.45, 0.0],
+       'waypoint2': [2.95, 0.95, 0.0],
+       'waypoint3': [3.15, 2.60, 0.0],
+       'waypoint4': [4.70, 0.50, 0.0],
+       'waypoint5': [0.95, 2.40, 0.0],
+       'waypoint6': [3.60, 1.70, 0.0],
+       'waypoint7': [2.00, 5.00, 0.0],
+       'waypoint8': [2.00, 3.30, 0.0],
+       'waypoint9': [4.00, 5.00, 0.0]}
 
 # Define the global varible: WAYPOINTS  Wpts=[[x_i,y_i]];
 global WAYPOINTS
@@ -625,6 +665,8 @@ if __name__ == '__main__':
         print()
         print("Press Intro to start ...")
         input_t=input("")
+
+        rospy.init_node('turtlebot_move', anonymous=False)
         
         # 5.0) Testing the GNC module         
         move_robot_waypoint0_waypoint1()
