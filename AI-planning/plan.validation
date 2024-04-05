@@ -1,0 +1,54 @@
+Type-checking move_robot
+...action passes type checking.
+Type-checking check_seals_valve_picture_eo
+...action passes type checking.
+Checking plan: tmp_sas_plan.2
+Plan to validate:
+
+Plan size: 5
+0:
+(move_robot turtlebot0 waypoint6 waypoint4 d64) - start
+ 
+4.744:
+(check_seals_valve_picture_eo turtlebot0 waypoint4 camera_eo0 valve0) - start
+ 
+4.7444:
+Invariant for (check_seals_valve_picture_eo turtlebot0 waypoint4 camera_eo0 valve0)
+ 
+4.7444:
+(move_robot turtlebot0 waypoint6 waypoint4 d64) - end
+ 
+14.744:
+Invariant for (check_seals_valve_picture_eo turtlebot0 waypoint4 camera_eo0 valve0)
+ 
+14.744:
+(move_robot turtlebot0 waypoint4 waypoint0 d40) - start
+(check_seals_valve_picture_eo turtlebot0 waypoint4 camera_eo0 valve0) - end
+ 
+28.3773:
+(move_robot turtlebot0 waypoint4 waypoint0 d40) - end
+ 
+
+Plan Validation details
+-----------------------
+
+Checking next happening (time 0)
+Deleting (at turtlebot0 waypoint6)
+
+Checking next happening (time 4.744)
+Deleting (no_seals_check valve0)
+
+Checking next happening (time 4.7444)
+Plan failed because of unsatisfied precondition in:
+Invariant for (check_seals_valve_picture_eo turtlebot0 waypoint4 camera_eo0 valve0)
+
+Plan failed to execute
+
+Plan Repair Advice:
+
+Invariant for (check_seals_valve_picture_eo turtlebot0 waypoint4 camera_eo0 valve0) has its condition unsatisfied between time 4.744 to 4.7444, the condition is satisfied on the empty set. 
+(Set (at turtlebot0 waypoint4) to true)
+
+
+Failed plans:
+ tmp_sas_plan.2 
