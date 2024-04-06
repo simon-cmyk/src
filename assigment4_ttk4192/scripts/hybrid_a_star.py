@@ -10,7 +10,7 @@ from matplotlib.patches import Rectangle
 from itertools import product
 import argparse
 from utils.grid import Grid_robplan
-from utils.car import SimpleCar
+from utils.car import RoboCar
 from utils.environment import Environment_robplan
 from utils.dubins_path import DubinsPath
 from utils.astar import Astar
@@ -267,13 +267,15 @@ def plotstart(env, car):
 
 def main_hybrid_a(heu,start_pos, end_pos, reverse, extra):
     l = 0.281
+    w = 0.306
+    max_phi = pi/5
     start_pos, end_pos = WpToCarFrame(start_pos, l), WpToCarFrame(end_pos, l)
     tc = map_grid_robplan()
     print(start_pos)
     print(end_pos)
 
-    env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.01)
-    car = SimpleCar(env, start_pos, end_pos, l, max_phi=pi/5)
+    env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.02)
+    car = RoboCar(env, start_pos, end_pos, l, max_phi, w)
     grid = Grid_robplan(env, cell_size=0.1)
 
     plotstart(env, car)
@@ -432,12 +434,12 @@ class Node:
 global WAYPOINTS # Siste er antagelse om pose
 WAYPOINTS = [
                 [0.30, 0.30, pi/2],
-                [1.85, 0.40, 0],
+                [1.85, 0.35, 0],
                 [3.00, 1.05, 0],
-                [3.25, 2.45, pi/2],
-                [4.70, 0.50, -pi/2],
-                [0.80, 2.50, -pi],
-                [3.60, 1.70, 0]
+                [3.25, 2.48, pi],
+                [4.65, 0.70, 0],
+                [0.80, 2.70, pi],
+                [3.60, 1.60, 0]
             ]
 
 class map_grid_robplan:
@@ -449,8 +451,8 @@ class map_grid_robplan:
             [2.45, 0.55, 0.90, 0.30],
             [3.15, 2.70, 0.20, 0.20],
             [4.80, 0.30, 0.20, 0.20],
-            [0.60, 2.40, 0.20, 0.20],
-            [3.20, 1.85, 0.80, 0.50],
+            [0.60, 2.40, 0.10, 0.10],
+            [3.20, 1.80, 0.80, 0.50],
             [1.00, 1.50, 0.40, 0.80],
             [1.50, 1.50, 0.40, 0.80],
             [2.00, 1.50, 0.70, 0.80], 
@@ -477,8 +479,8 @@ def WpToCarFrame(wp, l):
 if __name__ == '__main__':
     print("Executing hybrid A* algorithm")
 
-    start_pos   = WAYPOINTS[1]       # Here defined initial position [x,y,angle]
-    end_pos     = WAYPOINTS[2]       # Target point                  [x,y, angle]
+    start_pos   = WAYPOINTS[3]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINTS[4]       # Target point                  [x,y, angle]
 
     heu         = 1                    # Making use of all heuristics
     main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
