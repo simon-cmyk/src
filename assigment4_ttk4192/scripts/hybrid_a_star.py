@@ -55,7 +55,7 @@ class HybridAstar:
         self.w1 = 0.95 # 0.95 weight for astar heuristic
         self.w2 = 0.05 # 0.05 weight for simple heuristic
         self.w3 = 0.30 # 0.30 weight for extra cost of steering angle change
-        self.w4 = 0.20 # 0.10 weight for extra cost of turning
+        self.w4 = 0.10 # 0.10 weight for extra cost of turning
         self.w5 = 0.50 # 2.00 weight for extra cost of reversing
 
         self.thetas = get_discretized_thetas(self.unit_theta)
@@ -82,8 +82,11 @@ class HybridAstar:
         
     def astar_heuristic(self, pos):
         """ Heuristic by standard astar. """
-
-        h1 = self.astar.search_path(pos[:2]) * self.grid.cell_size
+        temp = self.astar.search_path(pos[:2])
+        if temp is not None:
+            h1 = self.astar.search_path(pos[:2]) * self.grid.cell_size
+        else:
+            h1 = 100
         h2 = self.simple_heuristic(pos[:2])
         
         return self.w1*h1 + self.w2*h2
@@ -256,7 +259,8 @@ def plotstart(env, car):
     start_state = car.get_car_state(car.start_pos)
     end_state = car.get_car_state(car.end_pos)
 
-    ax.plot(car.start_pos[0], car.start_pos[1], 'ro', markersize=6)
+    ax.plot(car.start_pos[0], car.start_pos[1], 'bo', markersize=6)
+    ax.plot(car.end_pos[0], car.end_pos[1], 'ro', markersize=6)
     ax = plot_a_car(ax, end_state.model)
     ax = plot_a_car(ax, start_state.model)
 
@@ -268,7 +272,7 @@ def plotstart(env, car):
 def main_hybrid_a(heu,start_pos, end_pos, reverse, extra):
     l = 0.281
     w = 0.306
-    max_phi = pi/5
+    max_phi = pi/4
     start_pos, end_pos = WpToCarFrame(start_pos, l), WpToCarFrame(end_pos, l)
     tc = map_grid_robplan()
     print(start_pos)
@@ -285,7 +289,7 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra):
     t = time.time()
     path, closed_ = hastar.search_path(heu, extra)
     print('Total time: {}s'.format(round(time.time()-t, 3)))
-
+    
     if not path:
         print('No valid path!')
         return
@@ -293,10 +297,10 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra):
     path = path[::5] + [path[-1]]
     branches = []
     bcolors = []
-    for node in closed_:
-        for b in node.branches:
-            branches.append(b[1:])
-            bcolors.append('y' if b[0] == 1 else 'b')
+    # for node in closed_:
+    #     for b in node.branches:
+    #         branches.append(b[1:])
+    #         bcolors.append('y' if b[0] == 1 else 'b')
 
     xl, yl = [], []
     xl_np1,yl_np1=[],[]
@@ -319,7 +323,7 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra):
     yl_np=yl_np
     global WAYPOINTS
     WAYPOINTS=np.column_stack([xl_np,yl_np])
-    print(WAYPOINTS)
+    Wpts = np.column_stack([xl, yl])
     
     start_state = car.get_car_state(car.start_pos)
     end_state = car.get_car_state(car.end_pos)
@@ -408,6 +412,8 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra):
 
     plt.show()
 
+    return Wpts
+
 class Node:
     """ Hybrid A* tree node. """
 
@@ -431,15 +437,15 @@ class Node:
 
         return hash((self.grid_pos))
 
-global WAYPOINTS # Siste er antagelse om pose
-WAYPOINTS = [
+global WAYPOINT # Siste er antagelse om pose
+WAYPOINT = [
                 [0.30, 0.30, pi/2],
                 [1.85, 0.35, 0],
                 [3.00, 1.05, 0],
                 [3.25, 2.48, pi],
                 [4.65, 0.70, 0],
-                [0.80, 2.70, pi],
-                [3.60, 1.60, 0]
+                [0.95, 2.60, pi],
+                [3.60, 1.40, pi]
             ]
 
 class map_grid_robplan:
@@ -464,12 +470,6 @@ class map_grid_robplan:
             [3.00, 0.00, 2.00, 0.30],
         ]
 
-    # p = argparse.ArgumentParser()
-    # p.add_argument('-heu', type=int, default=1, help='heuristic type')  #A* heuristic
-    # p.add_argument('-r', action='store_true', help='allow reverse or not')
-    # p.add_argument('-e', action='store_true', help='add extra cost or not')
-    # p.add_argument('-g', action='store_true', help='show grid or not')
-
 def WpToCarFrame(wp, l): 
     # Waypoint for car is the backtires.
     wp[0] -= l/2 * np.cos(wp[2])
@@ -479,11 +479,29 @@ def WpToCarFrame(wp, l):
 if __name__ == '__main__':
     print("Executing hybrid A* algorithm")
 
-    start_pos   = WAYPOINTS[3]       # Here defined initial position [x,y,angle]
-    end_pos     = WAYPOINTS[4]       # Target point                  [x,y, angle]
+    start_pos   = WAYPOINT[0]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINT[1]       # Target point                  [x,y, angle]
 
     heu         = 1                    # Making use of all heuristics
-    main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
 
-
+    start_pos   = WAYPOINT[1]      
+    end_pos     = WAYPOINT[2]
+    my_path2 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
     
+    start_pos   = WAYPOINT[2]      
+    end_pos     = WAYPOINT[3]
+    my_path3 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
+    
+    start_pos   = WAYPOINT[3]      
+    end_pos     = WAYPOINT[4]
+    my_path4 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
+
+    start_pos   = WAYPOINT[4]      
+    end_pos     = WAYPOINT[5]
+    my_path5 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
+
+    start_pos   = WAYPOINT[5]      
+    end_pos     = WAYPOINT[6]
+    my_path2 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
+
