@@ -525,53 +525,6 @@ def Manipulate_OpenManipulator_x():
     print("Executing manipulate a weight")
     time.sleep(5)
 
-def making_turn_exe():
-    print("Executing Make a turn")
-    time.sleep(1)
-    #Starts a new node
-    #rospy.init_node('turtlebot_move', anonymous=True)
-    velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-    vel_msg = Twist()
-
-    # Receiveing the user's input
-    print("Let's rotate your robot")
-    #speed = input("Input your speed (degrees/sec):")
-    #angle = input("Type your distance (degrees):")
-    #clockwise = input("Clockwise?: ") #True or false
-
-    speed = 5
-    angle = 180
-    clockwise = True
-
-    #Converting from angles to radians
-    angular_speed = speed*2*pi/360
-    relative_angle = angle*2*pi/360
-
-    #We wont use linear components
-    vel_msg.linear.x=0
-    vel_msg.linear.y=0
-    vel_msg.linear.z=0
-    vel_msg.angular.x = 0
-    vel_msg.angular.y = 0
-
-    # Checking if our movement is CW or CCW
-    if clockwise:
-        vel_msg.angular.z = -abs(angular_speed)
-    else:
-        vel_msg.angular.z = abs(angular_speed)
-    # Setting the current time for distance calculus
-    t0 = rospy.Time.now().to_sec()
-    current_angle = 0   #should be from the odometer
-
-    while(current_angle < relative_angle):
-        velocity_publisher.publish(vel_msg)
-        t1 = rospy.Time.now().to_sec()
-        current_angle = angular_speed*(t1-t0)
-
-    #Forcing our robot to stop
-    vel_msg.angular.z = 0
-    velocity_publisher.publish(vel_msg)
-    #rospy.spin()
 
 def check_pump_picture_ir_waypoint0():
     a=0
@@ -614,6 +567,9 @@ def move_robot(task):
     turtlebot_move()
 
 class turtle_turn():
+    """
+    Created by MNK as a method to orientate the robot before taking an image
+    """
     def __init__(self, theta_sp):
         rospy.on_shutdown(self.stop)
 
@@ -716,18 +672,24 @@ if __name__ == '__main__':
 
         rospy.init_node('turtlebot_move', anonymous=False)
 
+
         turtle_turn(0.0)
 
+        # task = 'move_robot_waypoint7_waypoint8'
+        # if 'move_robot' in task:
+        #     move_robot(task)
+
+        # taking_photo_exe()
+
+        # task = 'move_robot_waypoint8_waypoint9'
+        # if 'move_robot' in task:
+        #     move_robot(task)
+
         
-        
-        # 5.0) Testing the GNC module         
-        # move_robot_waypoint0_waypoint1()
 
 
 	# 5.1) Starting the AI Planner
        #Here you must run your AI planner module
-
-        
 
         # 5.2) Reading the plan 
         # print("  ")
@@ -745,31 +707,24 @@ if __name__ == '__main__':
         # task_finished=0
         # task_total=len(plan_general)
         # i_ini=0
-        # while i_ini < task_total:
-        #     move_robot_waypoint0_waypoint1()
-        #     #taking_photo_exe()
 
-        #     plan_temp=plan_general[i_ini].split()
-        #     print(plan_temp)
-        #     if plan_temp[0]=="check_pump_picture_ir":
-        #         print("Inspect -pump")
-        #         time.sleep(1)
+        task_total = ["move_robot_waypoint7_waypoint8",
+                      "check_seal_valve",
+                      "move_robot_waypoint8_waypoint9"]
 
-        #     if plan_temp[0]=="check_seals_valve_picture_eo":
-        #         print("check-valve-EO")
-        #         time.sleep(1)
+        for task in task_total:
+            if 'move_robot' in task:
+                move_robot(task)
 
-        #     if plan_temp[0]=="move_robot":
-        #         print("move_robot_waypoints")
-        #         time.sleep(1)
-
-        #     i_ini=i_ini+1  # Next tasks
+            elif 'check' in task:
+                rospy.sleep(3)
 
 
-        # print("")
-        # print("--------------------------------------")
-        # print("All tasks were performed successfully")
-        # time.sleep(5)  
+
+        print("")
+        print("--------------------------------------")
+        print("All tasks were performed successfully")
+        time.sleep(5)  
 
     except rospy.ROSInterruptException:
         rospy.loginfo("Action terminated.")
