@@ -6,7 +6,7 @@ class Environment:
     """ The map configuration. """
 
     #def __init__(self, obs=None, lx=10, ly=10):  % Aqui es creo, pero atento bro!
-    def __init__(self, obs=None, lx=20, ly=20):
+    def __init__(self, obs, lx, ly):
 
 
         self.lx  = float(lx)
@@ -81,14 +81,14 @@ class Environment_robplan:
     """ The map configuration. """
 
     #def __init__(self, obs=None, lx=10, ly=10):  % Aqui es creo, pero atento bro!
-    def __init__(self, obs=None, lx=40, ly=22.41):
+    def __init__(self, obs, lx, ly, safe_distance):
 
 
         self.lx  = float(lx)
         self.ly  = float(ly)
 
         if obs:
-            self.obs = [Obstacle(*ob) for ob in obs]
+            self.obs = [Obstacle(*ob, safe_dis=safe_distance) for ob in obs]
         else:
             self.obs = []
     

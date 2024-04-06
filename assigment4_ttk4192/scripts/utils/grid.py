@@ -10,7 +10,7 @@ from utils.environment import Environment
 class Grid:
     """ Grid configuration. """
 
-    def __init__(self, env, cell_size=0.25):
+    def __init__(self, env, cell_size):
 
         self.env = env
         self.cell_size = cell_size
@@ -67,7 +67,7 @@ class Grid:
 class Grid_robplan:
     """ Grid configuration. """
 
-    def __init__(self, env, cell_size=0.25):  #cell_size=0.25
+    def __init__(self, env, cell_size): 
 
         self.env = env
         self.cell_size = cell_size

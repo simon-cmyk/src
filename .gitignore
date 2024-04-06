@@ -1,2 +1,6 @@
 *.pyc
 
+assigment4_ttk4192/scripts/utils/__pycache__/car.cpython-38.pyc
+assigment4_ttk4192/scripts/utils/__pycache__/environment.cpython-38.pyc
+assigment4_ttk4192/scripts/utils/__pycache__/obstacle.cpython-38.pyc
+assigment4_ttk4192/scripts/utils/__pycache__/grid.cpython-38.pyc

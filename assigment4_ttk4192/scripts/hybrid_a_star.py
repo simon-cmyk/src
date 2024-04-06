@@ -26,7 +26,8 @@ from utils.utils import plot_a_car, get_discretized_thetas, round_theta, same_po
 
 class HybridAstar:
     """ Hybrid A* search procedure. """
-    def __init__(self, car, grid, reverse, unit_theta=pi/12, dt=1e-2, check_dubins=1):
+    #  def __init__(self, car, grid, reverse, unit_theta=pi/12, dt=1e-2, check_dubins=1):
+    def __init__(self, car, grid, reverse, unit_theta, dt, check_dubins):
         self.car = car
         self.grid = grid
         self.reverse = reverse
@@ -50,12 +51,12 @@ class HybridAstar:
 
         self.dubins = DubinsPath(self.car)
         self.astar = Astar(self.grid, self.goal[:2])
-        
-        self.w1 = 0.95 # weight for astar heuristic
-        self.w2 = 0.05 # weight for simple heuristic
-        self.w3 = 0.30 # weight for extra cost of steering angle change
-        self.w4 = 0.10 # weight for extra cost of turning
-        self.w5 = 2.00 # weight for extra cost of reversing
+
+        self.w1 = 0.95 # 0.95 weight for astar heuristic
+        self.w2 = 0.05 # 0.05 weight for simple heuristic
+        self.w3 = 0.30 # 0.30 weight for extra cost of steering angle change
+        self.w4 = 0.20 # 0.10 weight for extra cost of turning
+        self.w5 = 0.50 # 2.00 weight for extra cost of reversing
 
         self.thetas = get_discretized_thetas(self.unit_theta)
     
@@ -244,15 +245,40 @@ class HybridAstar:
 
         return None, None
 
+def plotstart(env, car):
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.set_xlim(-0.02,env.lx + 0.02)
+    ax.set_ylim(-0.02, env.ly + 0.02)
+    ax.set_aspect("equal")
 
-def main_hybrid_a(heu,start_pos, end_pos,reverse, extra, grid_on):
+    plt.grid(which='both')
 
+    start_state = car.get_car_state(car.start_pos)
+    end_state = car.get_car_state(car.end_pos)
+
+    ax.plot(car.start_pos[0], car.start_pos[1], 'ro', markersize=6)
+    ax = plot_a_car(ax, end_state.model)
+    ax = plot_a_car(ax, start_state.model)
+
+    for ob in env.obs:
+        ax.add_patch(Rectangle((ob.x, ob.y), ob.w, ob.h, fc='gray', ec='k'))
+
+    plt.show()
+
+def main_hybrid_a(heu,start_pos, end_pos, reverse, extra):
+    l = 0.281
+    start_pos, end_pos = WpToCarFrame(start_pos, l), WpToCarFrame(end_pos, l)
     tc = map_grid_robplan()
-    env = Environment_robplan(tc.obs)
-    car = SimpleCar(env, start_pos, end_pos, l=0.5)
-    grid = Grid_robplan(env)
+    print(start_pos)
+    print(end_pos)
 
-    hastar = HybridAstar(car, grid, reverse)
+    env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.01)
+    car = SimpleCar(env, start_pos, end_pos, l, max_phi=pi/5)
+    grid = Grid_robplan(env, cell_size=0.1)
+
+    plotstart(env, car)
+
+    hastar = HybridAstar(car, grid, reverse, unit_theta=pi/12, dt=1e-2, check_dubins=True)
 
     t = time.time()
     path, closed_ = hastar.search_path(heu, extra)
@@ -286,9 +312,9 @@ def main_hybrid_a(heu,start_pos, end_pos,reverse, extra, grid_on):
             yl_np1.append(path[i*dt_s].pos[1])      
     # defining way-points
     xl_np=np.array(xl_np1)
-    xl_np=xl_np-20
+    xl_np=xl_np
     yl_np=np.array(yl_np1)
-    yl_np=yl_np-11.2
+    yl_np=yl_np
     global WAYPOINTS
     WAYPOINTS=np.column_stack([xl_np,yl_np])
     print(WAYPOINTS)
@@ -298,15 +324,10 @@ def main_hybrid_a(heu,start_pos, end_pos,reverse, extra, grid_on):
 
     # plot and animation
     fig, ax = plt.subplots(figsize=(6,6))
-    ax.set_xlim(0, env.lx)
-    ax.set_ylim(0, env.ly)
+    ax.set_xlim(-0.02,env.lx + 0.02)
+    ax.set_ylim(-0.02, env.ly + 0.02)
     ax.set_aspect("equal")
 
-    ax.set_xticks(np.arange(0, env.lx, grid.cell_size*20))
-    ax.set_yticks(np.arange(0, env.ly, grid.cell_size*20))
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    ax.tick_params(length=0)
     plt.grid(which='both')
 
     
@@ -410,55 +431,57 @@ class Node:
 
 global WAYPOINTS # Siste er antagelse om pose
 WAYPOINTS = [
-                [0.30, 0.30, 0],
+                [0.30, 0.30, pi/2],
                 [1.85, 0.40, 0],
-                [3.00, 0.95, 0],
-                [3.25, 2.70, 0],
+                [3.00, 1.05, 0],
+                [3.25, 2.45, pi/2],
                 [4.70, 0.50, -pi/2],
                 [0.80, 2.50, -pi],
                 [3.60, 1.70, 0]
             ]
 
-def scale2PlotCoords(x, y, w, h):
-    return [x * 40 / 5.0 , y * 22.41 / 2.9, w / 5.0 * 40, h / 2.9 * 22.41]
-
 class map_grid_robplan:
     def __init__(self):
         # x, y, w, h. Not added everything
         self.obs = [
-            scale2PlotCoords(1.35, 0.50, 0.90, 0.30),
-            scale2PlotCoords(2.50, 0.50, 0.90, 0.30),
-            scale2PlotCoords(2.90, 0.00, 2.10, 0.30),
-            scale2PlotCoords(1.20, 1.50, 0.40, 0.80),
-            scale2PlotCoords(1.70, 1.50, 0.40, 0.80),
-            scale2PlotCoords(2.35, 1.50, 0.70, 0.80),
-            scale2PlotCoords(3.65, 1.75, 0.80, 0.50),
-            scale2PlotCoords(0.00, 1.00, 0.45, 0.20),
-            scale2PlotCoords(0.00, 0.00, 0.20, 0.20),
-            scale2PlotCoords(4.80, 0.30, 0.20, 0.20), 
-            scale2PlotCoords(3.60, 2.70, 0.20, 0.20),
-            scale2PlotCoords(0.00, -0.02, 5.00, 0.02),
-            scale2PlotCoords(-0.02, 0.00, 0.02, 2.90),
-            scale2PlotCoords(0.00, 2.90, 5.00, 0.02),
-            scale2PlotCoords(5.00, 0.00, 0.02, 2.90),      
+            [0.00, 0.00, 0.20, 0.20],
+            [1.35, 0.55, 0.90, 0.30],
+            [2.45, 0.55, 0.90, 0.30],
+            [3.15, 2.70, 0.20, 0.20],
+            [4.80, 0.30, 0.20, 0.20],
+            [0.60, 2.40, 0.20, 0.20],
+            [3.20, 1.85, 0.80, 0.50],
+            [1.00, 1.50, 0.40, 0.80],
+            [1.50, 1.50, 0.40, 0.80],
+            [2.00, 1.50, 0.70, 0.80], 
+            [0.00, -0.02, 5.00, 0.02],
+            [-0.02, 0.00, 0.02, 2.90],
+            [0.00, 2.90, 5.00, 0.02],
+            [5.00, 0.00, 0.02, 2.90], 
+            [0.00, 1.00, 0.5, 0.20],
+            [3.00, 0.00, 2.00, 0.30],
         ]
 
+    # p = argparse.ArgumentParser()
+    # p.add_argument('-heu', type=int, default=1, help='heuristic type')  #A* heuristic
+    # p.add_argument('-r', action='store_true', help='allow reverse or not')
+    # p.add_argument('-e', action='store_true', help='add extra cost or not')
+    # p.add_argument('-g', action='store_true', help='show grid or not')
+
+def WpToCarFrame(wp, l): 
+    # Waypoint for car is the backtires.
+    wp[0] -= l/2 * np.cos(wp[2])
+    wp[1] -= l/2 * np.sin(wp[2]) 
+    return wp
 
 if __name__ == '__main__':
     print("Executing hybrid A* algorithm")
-    p = argparse.ArgumentParser()
-    p.add_argument('-heu', type=int, default=1, help='heuristic type')  #A* heuristic
-    p.add_argument('-r', action='store_true', help='allow reverse or not')
-    p.add_argument('-e', action='store_true', help='add extra cost or not')
-    p.add_argument('-g', action='store_true', help='show grid or not')
-    args = p.parse_args()
-    start_pos = WAYPOINTS[3]      # Here defined initial position [x,y,angle]
-    end_pos = WAYPOINTS[4]   # Target point [x,y, angle]
-    
-    start_pos[:2]   = scale2PlotCoords(start_pos[0], start_pos[1], 0, 0)[:2]
-    end_pos[:2]     = scale2PlotCoords(end_pos[0], end_pos[1], 0, 0)[:2]
-    
-    main_hybrid_a(args.heu,start_pos,end_pos,args.r,args.e,args.g)
+
+    start_pos   = WAYPOINTS[1]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINTS[2]       # Target point                  [x,y, angle]
+
+    heu         = 1                    # Making use of all heuristics
+    main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True)
 
 
-    print("An optimal path was computed using hybrid A* algorithm")
+    

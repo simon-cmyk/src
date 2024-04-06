@@ -22,8 +22,8 @@ class State:
 
 class SimpleCar:
     """ Car model and functions. """
-    # Here you define the vehicle size "l" and the maximun_drift angle max_phi
-    def __init__(self, env, start_pos=None, end_pos=None, l=0.5, max_phi=pi/5):
+    # Size gotten from the hardware specifications
+    def __init__(self, env, start_pos, end_pos, l, max_phi):
 
         self.env = env
         self.l = float(l)
