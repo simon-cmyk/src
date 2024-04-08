@@ -1,6 +1,9 @@
 from math import cos, sin, atan2, pi, sqrt
-from matplotlib.collections import PatchCollection
+from matplotlib import animation
+from matplotlib.collections import LineCollection, PatchCollection
+from matplotlib.patches import Rectangle
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def transform(x, y, w, l, theta, id):
@@ -21,11 +24,16 @@ def transform(x, y, w, l, theta, id):
     
     return np.array([x_, y_])
 
+def WpToCarFrame(wp, l): 
+    # Waypoint for car is the backtires.
+    wp[0] -= l/2 * np.cos(wp[2])
+    wp[1] -= l/2 * np.sin(wp[2]) 
+    return wp
 
 def plot_a_car(ax, model):
     """ Plot a car model. """
 
-    pc = PatchCollection(model, match_original=True, zorder=2, fc='gray', ec='black')
+    pc = PatchCollection(model, match_original=True, zorder=2)
     ax.add_collection(pc)
 
     return ax
@@ -94,3 +102,112 @@ def get_discretized_thetas(unit_theta):
         thetas.append(theta)
     
     return thetas
+
+def plotstart(env, car):
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.set_xlim(-0.02,env.lx + 0.02)
+    ax.set_ylim(-0.02, env.ly + 0.02)
+    ax.set_aspect("equal")
+
+    plt.grid(which='both')
+
+    start_state = car.get_car_state(car.start_pos)
+    end_state = car.get_car_state(car.end_pos)
+
+    ax = plot_a_car(ax, end_state.model)
+    ax = plot_a_car(ax, start_state.model)
+    ax.plot(car.start_pos[0], car.start_pos[1], 'bo', markersize=6, label="start")
+    ax.plot(car.end_pos[0], car.end_pos[1], 'ro', markersize=6, label="end")
+
+    for ob in env.obs:
+        ax.add_patch(Rectangle((ob.x, ob.y), ob.w, ob.h, fc='gray', ec='k'))
+    plt.legend(loc="lower right")
+    plt.show()
+
+def animate_solution(car, env, path, xl, yl, carl, cell_size):
+    start_state = car.get_car_state(car.start_pos)
+    end_state = car.get_car_state(car.end_pos)
+
+    # plot and animation
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.set_xlim(-0.02,env.lx + 0.02)
+    ax.set_ylim(-0.02, env.ly + 0.02)
+    ax.set_aspect("equal")
+
+    ticksx = np.arange(0, env.lx, cell_size)
+    ticksy = np.arange(0, env.ly, cell_size)
+    ax.set_xticks(ticksx)
+    ax.set_yticks(ticksy)
+    labelx = [str(tick) if tick % 0.5 == 0 else "" for tick in ticksx]
+    labely = [str(tick) if tick % 0.5 == 0 else "" for tick in ticksy]
+    ax.set_xticklabels(labelx)
+    ax.set_yticklabels(labely)
+    ax.tick_params(length=1)
+    plt.grid(which='both')
+    
+    for ob in env.obs:
+        ax.add_patch(Rectangle((ob.x, ob.y), ob.w, ob.h, fc='gray', ec='k'))
+    
+    ax = plot_a_car(ax, end_state.model)
+    ax = plot_a_car(ax, start_state.model)
+    ax.plot(car.start_pos[0], car.start_pos[1], 'ro', markersize=6)
+    ax.plot(car.start_pos[0], car.start_pos[1], 'bo', markersize=6, label="start")
+    ax.plot(car.end_pos[0], car.end_pos[1], 'ro', markersize=6, label="end")
+    plt.legend(loc="lower right")
+    _carl = PatchCollection(carl[::20], color='m', alpha=0.1, zorder=3)
+    ax.add_collection(_carl)
+    ax.plot(xl, yl, color='whitesmoke', linewidth=2, zorder=3)
+    _car = PatchCollection(path[-1].model, match_original=True, zorder=4, fc="gray", ec="black")
+    ax.add_collection(_car)
+
+    _branches = LineCollection([], linewidth=1)
+    ax.add_collection(_branches)
+
+    _path, = ax.plot([], [], color='violet', linewidth=4)
+    _carl = PatchCollection([])
+    ax.add_collection(_carl)
+    _path1, = ax.plot([], [], color='w', linewidth=2)
+    _car = PatchCollection([])
+    ax.add_collection(_car)
+    
+    frames = len(path) + 1
+
+    def init():
+        _branches.set_paths([])
+        _path.set_data([], [])
+        _carl.set_paths([])
+        _path1.set_data([], [])
+        _car.set_paths([])
+
+        return _branches, _path, _carl, _path1, _car
+
+    def animate(i):
+
+        edgecolor = ['k']*7
+        facecolor = ['darkolivegreen'] * 7 
+
+        j = i
+
+        _path.set_data(xl[min(j, len(path)-1):], yl[min(j, len(path)-1):])
+
+        sub_carl = carl[:min(j+1, len(path))]
+        _carl.set_paths(sub_carl[::4])
+        _carl.set_edgecolor('k')
+        _carl.set_facecolor('k')
+        _carl.set_alpha(0.1)
+        _carl.set_zorder(3)
+
+        _path1.set_data(xl[:min(j+1, len(path))], yl[:min(j+1, len(path))])
+        _path1.set_zorder(3)
+
+        _car.set_paths(path[min(j, len(path)-1)].model)
+        _car.set_edgecolor(edgecolor)
+        _car.set_facecolor(facecolor)
+        _car.set_zorder(3)
+
+        return _branches, _path, _carl, _path1, _car
+
+    ani = animation.FuncAnimation(fig, animate, init_func=init, frames=frames,
+                                interval=1, repeat=True, blit=True)
+
+    plt.show()
