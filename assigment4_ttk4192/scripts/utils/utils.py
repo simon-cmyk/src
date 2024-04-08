@@ -25,7 +25,7 @@ def transform(x, y, w, l, theta, id):
 def plot_a_car(ax, model):
     """ Plot a car model. """
 
-    pc = PatchCollection(model, match_original=True, zorder=2)
+    pc = PatchCollection(model, match_original=True, zorder=2, fc='gray', ec='black')
     ax.add_collection(pc)
 
     return ax

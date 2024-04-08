@@ -327,11 +327,12 @@ class turtlebot_move():
     """
     Path-following module
     """
-    def __init__(self):
+    def __init__(self,path):
         # rospy.init_node('turtlebot_move', anonymous=False)
         # rospy.loginfo("Press CTRL + C to terminate")
         rospy.on_shutdown(self.stop)
 
+        self.path = path
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
@@ -345,7 +346,8 @@ class turtlebot_move():
         self.trajectory = list()                                               # store history (trajectory driven by turtlebot3)
 
         # track a sequence of waypoints
-        for point in WAYPOINTS:                                                # global list of wpns (xi,yi)
+        # for point in WAYPOINTS:                                                # global list of wpns (xi,yi)
+        for point in self.path:
             self.move_to_point(point[0], point[1])
             rospy.sleep(1)
         self.stop()
@@ -369,7 +371,7 @@ class turtlebot_move():
         theta = atan2(diff_y, diff_x)                                            # angle towards new point
 
         # We should adopt different parameters for different kinds of movement
-        self.pid_theta.setPID(1, 0, 0)     # P control while steering
+        self.pid_theta.setPID(1, 0.005, 0)     # P control while steering
         self.pid_theta.setPoint(theta)
         rospy.logwarn("### PID: set target theta = " + str(theta) + " ###")
 
@@ -491,11 +493,11 @@ def taking_photo_exe():
     # Sleep to give the last log messages time to be sent
 
 	# saving photo in a desired directory
-    file_source = '/home/miguel/catkin_ws/'
-    file_destination = '/home/miguel/catkin_ws/src/assigment4_ttk4192/scripts'
-    g='photo'+dt_string+'.jpg'
+    # file_source = '/home/miguel/catkin_ws/'
+    # file_destination = '/home/miguel/catkin_ws/src/assigment4_ttk4192/scripts'
+    # g='photo'+dt_string+'.jpg'
 
-    shutil.move(file_source + g, file_destination)
+    # shutil.move(file_source + g, file_destination)
     rospy.sleep(1)
 
 def move_robot_waypoint0_waypoint1():
@@ -524,7 +526,6 @@ def move_robot_waypoint0_waypoint1():
 def Manipulate_OpenManipulator_x():
     print("Executing manipulate a weight")
     time.sleep(5)
-
 
 def check_pump_picture_ir_waypoint0():
     a=0
@@ -560,11 +561,20 @@ def move_robot(task):
     # Get path from path planner
     print('Computing path using A*')
     # TODO: Add path planner
-    WAYPOINTS = [startpos,goalpos]
+    # WAYPOINTS = [startpos,goalpos]
+    path = [startpos,goalpos]
 
     # Move robot using motion controller
     print("Executing path following")
-    turtlebot_move()
+    turtlebot_move(path)
+
+def take_picture(task):
+    # Initialize
+    waypoint = task.split('_')[2]
+    theta = WPNS[waypoint]
+
+    turn = turtle_turn(theta)       # adjust angle before taking photo
+    taking_photo_exe()              # take picture
 
 class turtle_turn():
     """
@@ -623,32 +633,44 @@ class turtle_turn():
         (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(quarternion)
         self.theta = yaw
 
+def EucledianDist():
+    """
+    MNK - Function created to find eucledian distance between waypoints needed in AI planer
+    DELETE to cleanup code when not needed anymore
+    """
+    for wpn1 in WPNS:
+        for wpn2 in WPNS:
+            if wpn1 != wpn2:
 
+                dist = sqrt((WPNS[wpn1][0] - WPNS[wpn2][0])**2 + (WPNS[wpn1][1] - WPNS[wpn2][1])**2)
+                print("Distance " + wpn1 + " to " + wpn2 + ": " + str(dist))
 
 # Define list of global waypoints
 global WPNS
 WPNS = {'waypoint0': [0.30, 0.30, 0.0],
-       'waypoint1': [1.80, 0.45, 0.0],
-       'waypoint2': [2.95, 0.95, 0.0],
-       'waypoint3': [3.15, 2.60, 0.0],
-       'waypoint4': [4.70, 0.50, 0.0],
-       'waypoint5': [0.95, 2.40, 0.0],
-       'waypoint6': [3.60, 1.70, 0.0],
-       'waypoint7': [2.00, 5.00, 0.0],
-       'waypoint8': [2.00, 3.30, 0.0],
-       'waypoint9': [4.00, 5.00, 0.0]}
+       'waypoint1':  [1.80, 0.45, pi/2],
+       'waypoint2':  [2.95, 0.95, 3*pi/2],
+       'waypoint3':  [3.15, 2.60, 0.0],
+       'waypoint4':  [4.70, 0.50, 0.0],
+       'waypoint5':  [0.95, 2.50, pi],
+       'waypoint6':  [3.60, 1.70, pi/2],
+       'waypoint7':  [0.40, 0.40, 0.0],
+       'waypoint8':  [0.75, 0.40, 0.0],
+       'waypoint9':  [0.75, 1.25, 0.0],
+       'waypoint10': [2.90, 1.25, 0.0]}
+
 
 # Define the global varible: WAYPOINTS  Wpts=[[x_i,y_i]];
 global WAYPOINTS
-WAYPOINTS = [
-                [0.30, 0.30],
-                [1.80, 0.50],
-                [2.90, 0.85],
-                [3.25, 2.70],
-                [4.70, 0.50],
-                [0.80, 2.50],
-                [3.60, 1.70]
-            ]
+# WAYPOINTS = [
+#                 [0.30, 0.30],
+#                 [1.80, 0.45],
+#                 [2.95, 0.95],
+#                 [3.15, 2.60],
+#                 [4.70, 0.50],
+#                 [0.95, 2.50],
+#                 [3.60, 1.70]
+#             ]
 
 
 # 5) Program here the main commands of your mission planning algorithm for turtlebot ---------------------------------
@@ -672,8 +694,7 @@ if __name__ == '__main__':
 
         rospy.init_node('turtlebot_move', anonymous=False)
 
-
-        turtle_turn(0.0)
+        # turtle_turn(0.0)
 
         # task = 'move_robot_waypoint7_waypoint8'
         # if 'move_robot' in task:
@@ -708,15 +729,19 @@ if __name__ == '__main__':
         # task_total=len(plan_general)
         # i_ini=0
 
+        rospy.sleep(1)
+
         task_total = ["move_robot_waypoint7_waypoint8",
-                      "check_seal_valve",
-                      "move_robot_waypoint8_waypoint9"]
+                      "move_robot_waypoint8_waypoint9",
+                      "move_robot_waypoint9_waypoint2",
+                      "take_picture_waypoint2"]
 
         for task in task_total:
             if 'move_robot' in task:
                 move_robot(task)
 
-            elif 'check' in task:
+            elif 'take_picture' in task:
+                take_picture(task)
                 rospy.sleep(3)
 
 

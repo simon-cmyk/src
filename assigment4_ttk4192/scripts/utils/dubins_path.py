@@ -5,7 +5,7 @@ from matplotlib.collections import PatchCollection, LineCollection
 from matplotlib.patches import Rectangle
 import matplotlib.animation as animation
 
-from utils.car import SimpleCar
+from utils.car import RoboCar
 from utils.environment import Environment
 from utils.cases import TestCase
 from utils.utils import transform, directional_theta, plot_a_car, distance
@@ -282,9 +282,9 @@ def main():
 
     env = Environment(tc.obs)
 
-    car = SimpleCar(env, tc.start_pos2, tc.end_pos2)
+    # car = Robocar(env, tc.start_pos2, tc.end_pos2)
 
-    dubins = DubinsPath(car)
+    # dubins = DubinsPath(car)
 
     t = time()
     solutions = dubins.find_tangents(car.start_pos, car.end_pos)
