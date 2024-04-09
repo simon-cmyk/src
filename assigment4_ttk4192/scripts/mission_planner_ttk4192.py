@@ -32,7 +32,10 @@ from utils.car import SimpleCar
 from utils.grid import Grid_robplan
 # Import here the packages used in your codes
 from hybrid_a_star import HybridAstar, main_hybrid_a
-from GNC import PosControl
+from GNC import PosControl, PID
+import actionlib
+import control_msgs.msg
+import trajectory_msgs.msg
 
 """ ----------------------------------------------------------------------------------
 Mission planner for Autonomos robots: TTK4192,NTNU. 
@@ -127,48 +130,39 @@ def taking_photo_exe():
     # shutil.move(file_source + g, file_destination)
     rospy.sleep(1)
 
-def move_robot_waypoint0_waypoint1():
-    # This function executes Move Robot from 1 to 2
-    # This function uses hybrid A-star
-    a=0
-    while a<3:
-        print("Excuting Mr12")
-        time.sleep(1)
-        a=a+1
-    print("Computing hybrid A* path")
-	
-    p = argparse.ArgumentParser()
-    p.add_argument('-heu', type=int, default=1, help='heuristic type')
-    p.add_argument('-r', action='store_true', help='allow reverse or not')
-    p.add_argument('-e', action='store_true', help='add extra cost or not')
-    p.add_argument('-g', action='store_true', help='show grid or not')
-    args = p.parse_args()
-    start_pos = [2, 2, 0]
-    end_pos = [6, 6, 3*pi/4]
-    main_hybrid_a(args.heu,start_pos,end_pos,args.r,args.e,args.g)
-    print("Executing path following")
-    turtlebot_move()
+def Manipulate_OpenManipulator_x(joints_pos, execution_time_secs=1):
+
+    waypoint = task.split('_')[1]
+    theta = WPN_ORIENTATION[waypoint]
+
+    rospy.logwarn("Executing manipulate an object")
+
+    turtle_turn(theta)              # adjust angle before manipulating
+
+    move_gripper(init_pose)
+    rospy.sleep(2)
+    move_gripper(home_pose)
 
 
-def Manipulate_OpenManipulator_x():
-    print("Executing manipulate a weight")
-    time.sleep(5)
 
-def check_pump_picture_ir_waypoint0():
-    a=0
-    while a<3:
-        print("Taking IR picture at waypoint0 ...")
-        time.sleep(1)
-        a=a+1
-    time.sleep(5)
+def move_gripper(joints_pos, execution_time_secs=1):
+    rospy.logwarn("Executing move manipulator")
 
-def check_seals_valve_picture_eo_waypoint0():
-    a=0
-    while a<3:
-        print("Taking EO picture at waypoint0 ...")
-        time.sleep(1)
-        a=a+1
-    time.sleep(5)
+    goal_point = trajectory_msgs.msg.JointTrajectoryPoint(positions=joints_pos)
+    goal_point.time_from_start.secs = execution_time_secs
+
+    trajectory = trajectory_msgs.msg.JointTrajectory(joint_names=['joint1', 'joint2', 'joint3', 'joint4'], points=[goal_point])
+
+
+    goal = control_msgs.msg.FollowJointTrajectoryGoal(trajectory=trajectory)
+
+    action_client.wait_for_server()
+
+    action_client.send_goal(goal)
+
+    action_client.wait_for_result()
+
+    return action_client.get_result()
 
 # Charging battery 
 def charge_battery_waypoint0():
@@ -198,14 +192,12 @@ def move_robot(task):
     PosControl(my_path1)
 
 
-
-
 def take_picture(task):
     # Initialize
     waypoint = task.split('_')[2]
-    theta = WPNS[waypoint][2]
+    theta = WPN_ORIENTATION[waypoint]
 
-    turn = turtle_turn(theta)       # adjust angle before taking photo
+    turtle_turn(theta)              # adjust angle before taking photo
     taking_photo_exe()              # take picture
 
 class turtle_turn():
@@ -265,36 +257,7 @@ class turtle_turn():
         (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(quarternion)
         self.theta = yaw
 
-def EucledianDist():
-    """
-    MNK - Function created to find eucledian distance between waypoints needed in AI planer
-    DELETE to cleanup code when not needed anymore
-    """
-    for wpn1 in WPNS:
-        for wpn2 in WPNS:
-            if wpn1 != wpn2:
 
-                dist = sqrt((WPNS[wpn1][0] - WPNS[wpn2][0])**2 + (WPNS[wpn1][1] - WPNS[wpn2][1])**2)
-                print("Distance " + wpn1 + " to " + wpn2 + ": " + str(dist))
-
-def move_sine():
-    """
-    Created by MNK to test creating a trajectory and making TB3 follow it
-    """
-    print("Initiated move sine trajectory")
-    # Create trajectory
-    curr_pos = [0.0,0.0]
-    x,y = [], []
-    for k in range(1000):
-        x.append(curr_pos[0] + sin(k/100))
-        y.append(curr_pos[1] + k/100)
-
-    xl = np.array(x)
-    yl = np.array(y)
-    path = np.column_stack([xl,yl])
-
-    # Move turtlebot
-    turtlebot_move(path)
 
 def odom_callback(msg):
     # Get (x, y, theta) specification from odometry topic
@@ -305,6 +268,8 @@ def odom_callback(msg):
     robot_pos_theta = yaw
     robot_pos_x = msg.pose.pose.position.x
     robot_pos_y = msg.pose.pose.position.y
+
+
 
 global robot_pos_x
 global robot_pos_y
@@ -319,29 +284,20 @@ WPNS = {'waypoint0': [0.40, 0.40, 0.0],
        'waypoint3':  [3.15, 2.60, 0.0],
        'waypoint4':  [4.70, 0.50, 0.0],
        'waypoint5':  [0.95, 2.50, pi],
-       'waypoint6':  [3.60, 1.70, pi/2],
-       'waypoint7':  [0.40, 0.40, 0.0],
-       'waypoint8':  [0.75, 0.40, 0.0],
-       'waypoint9':  [0.75, 1.25, 0.0],
-       'waypoint10': [2.90, 1.25, 0.0]}
+       'waypoint6':  [3.60, 1.70, pi/2]}
 
-# 'waypoint0': [0.30, 0.30, 0.0],
-# 'waypoint1':  [1.80, 0.45, pi/2],
-# 'waypoint2':  [2.95, 0.95, 3*pi/2],
+global WPN_ORIENTATION
+WPN_ORIENTATION = {'waypoint0': 0.0,
+                   'waypoint1': pi/2,
+                   'waypoint2': -pi/2,
+                   'waypoint3': 0.0,
+                   'waypoint4': 0.0,
+                   'waypoint5': pi,
+                   'waypoint6': pi/2}
 
+home_pose = [-0.0, -1.0, 0.3, 0.7]
+init_pose = [0.0, 0.0, 0.0, 0.0]
 
-
-# Define the global varible: WAYPOINTS  Wpts=[[x_i,y_i]];
-global WAYPOINTS
-# WAYPOINTS = [
-#                 [0.30, 0.30],
-#                 [1.80, 0.45],
-#                 [2.95, 0.95],
-#                 [3.15, 2.60],
-#                 [4.70, 0.50],
-#                 [0.95, 2.50],
-#                 [3.60, 1.70]
-#             ]
 
 
 # 5) Program here the main commands of your mission planning algorithm for turtlebot ---------------------------------
@@ -361,12 +317,14 @@ if __name__ == '__main__':
         print("**************************************************************")
         print()
         print("Press Intro to start ...")
-        input_t=input("")
+        # input_t=input("")
 
         rospy.init_node('turtlebot_move', anonymous=False)
         odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
+        action_client = actionlib.SimpleActionClient('/arm_controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
 
 
+    
 
 	# 5.1) Starting the AI Planner
        #Here you must run your AI planner module
@@ -388,12 +346,11 @@ if __name__ == '__main__':
         # task_total=len(plan_general)
         # i_ini=0
 
-        rospy.sleep(1)
 
-        # PosControl([[1.4, 0.4],[0.8, 0.4]])
 
         task_total = ["move_robot_waypoint0_waypoint2",
                       "take_picture_waypoint2",
+                      "manipulate_waypoint2",
                       "move_robot_waypoint2_waypoint0"]
 
         for task in task_total:
@@ -403,6 +360,10 @@ if __name__ == '__main__':
             elif 'take_picture' in task:
                 take_picture(task)
                 rospy.sleep(3)
+
+            elif 'manipulate' in task:
+                Manipulate_OpenManipulator_x(task)
+
 
 
 
