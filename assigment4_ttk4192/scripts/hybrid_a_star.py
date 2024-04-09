@@ -236,16 +236,16 @@ class HybridAstar:
 def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
     l = 0.281
     w = 0.306
-    max_phi = pi/4
+    max_phi = pi/5
     start_pos, end_pos
     tc = map_grid_robplan()
   
-    env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.02)
+    env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.03)
     car = RoboCar(env, start_pos, end_pos, l, max_phi, w)
     grid = Grid_robplan(env, cell_size=0.1)
 
-    # if visualize == True:
-    #     plotstart(env, car)
+    if visualize == True:
+        plotstart(env, car)
 
     hastar = HybridAstar(car, grid, reverse, unit_theta=pi/12, dt=1e-2, check_dubins=True)
 
@@ -271,7 +271,7 @@ WAYPOINT = [
                 [0.30, 0.30, pi/2],
                 [1.85, 0.35, 0],
                 [3.00, 1.05, 0],
-                [3.25, 2.50, pi],
+                [3.75, 2.60, pi],
                 [4.65, 0.75, pi],
                 [1.05, 2.60, pi],
                 [3.60, 1.50, 0]
