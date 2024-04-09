@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from math import pi, sqrt, atan2, tan
+from math import pi, sqrt, atan2, tan, sin, cos
 from os import system, name
 import re
 import fileinput
@@ -31,6 +31,7 @@ from utils.environment import Environment_robplan
 from utils.car import SimpleCar
 from utils.grid import Grid_robplan
 # Import here the packages used in your codes
+from hybrid_a_star import HybridAstar, main_hybrid_a
 
 """ ----------------------------------------------------------------------------------
 Mission planner for Autonomos robots: TTK4192,NTNU. 
@@ -56,225 +57,7 @@ version: 1.1
 3) Other method
 """
 
-class Node:
-    """ Hybrid A* tree node. """
 
-    def __init__(self, grid_pos, pos):
-
-        self.grid_pos = grid_pos
-        self.pos = pos
-        self.g = None
-        self.g_ = None
-        self.f = None
-        self.parent = None
-        self.phi = 0
-        self.m = None
-        self.branches = []
-
-class HybridAstar:
-    """ Hybrid A* search procedure. """
-
-    def __init__(self, car, grid_robplan, reverse, unit_theta=pi/12, dt=1e-2, check_dubins=1):
-        
-        self.car = car
-        self.grid = grid_robplan
-        self.reverse = reverse
-        self.unit_theta = unit_theta
-        self.dt = dt
-        self.check_dubins = check_dubins
-
-        self.start = self.car.start_pos
-        self.goal = self.car.end_pos
-
-        self.r = self.car.l / tan(self.car.max_phi)
-        self.drive_steps = int(sqrt(2)*self.grid.cell_size/self.dt) + 1
-        self.arc = self.drive_steps * self.dt
-        self.phil = [-self.car.max_phi, 0, self.car.max_phi]
-        self.ml = [1, -1]
-
-        if reverse:
-            self.comb = list(product(self.ml, self.phil))
-        else:
-            self.comb = list(product([1], self.phil))
-
-        self.dubins = DubinsPath(self.car)
-        self.astar = Astar(self.grid, self.goal[:2])
-        
-        self.w1 = 0.95 # weight for astar heuristic
-        self.w2 = 0.05 # weight for simple heuristic
-        self.w3 = 0.30 # weight for extra cost of steering angle change
-        self.w4 = 0.10 # weight for extra cost of turning
-        self.w5 = 2.00 # weight for extra cost of reversing
-
-        self.thetas = get_discretized_thetas(self.unit_theta)
-
-    def search_path(self, heu=1, extra=False):
-        """ Hybrid A* pathfinding. """
-        return None, None
-
-
-def main_hybrid_a(heu,start_pos, end_pos,reverse, extra, grid_on):
-
-    tc = map_grid_robplan()
-    env = Environment_robplan(tc.obs)
-    car = SimpleCar(env, start_pos, end_pos)
-    grid = Grid_robplan(env)
-
-    hastar = HybridAstar(car, grid, reverse)
-
-    t = time.time()
-    path, closed_ = hastar.search_path(heu, extra)
-    print('Total time: {}s'.format(round(time.time()-t, 3)))
-
-    if not path:
-        print('No valid path!')
-        return
-    # a post-processing is required to have path list
-    path = path[::5] + [path[-1]]
-    #for i in range(len(path)):
-    #    print(path[i].pos[0])
-    
-    branches = []
-    bcolors = []
-    for node in closed_:
-        for b in node.branches:
-            branches.append(b[1:])
-            bcolors.append('y' if b[0] == 1 else 'b')
-
-    xl, yl = [], []
-    xl_np1,yl_np1=[],[]
-    carl = []
-    dt_s=int(25)  # samples for gazebo simulator
-    for i in range(len(path)):
-        xl.append(path[i].pos[0])
-        yl.append(path[i].pos[1])
-        carl.append(path[i].model[0])
-        if i==0 or i==len(path):
-            xl_np1.append(path[i].pos[0])
-            yl_np1.append(path[i].pos[1])            
-        elif dt_s*i<len(path):
-            xl_np1.append(path[i*dt_s].pos[0])
-            yl_np1.append(path[i*dt_s].pos[1])      
-    # defining way-points (traslandado el origen a (0,0))
-    xl_np=np.array(xl_np1)
-    xl_np=xl_np-20
-    yl_np=np.array(yl_np1)
-    yl_np=yl_np-11.2
-    global WAYPOINTS
-    WAYPOINTS=np.column_stack([xl_np,yl_np])
-    print(WAYPOINTS)
-    
-    start_state = car.get_car_state(car.start_pos)
-    end_state = car.get_car_state(car.end_pos)
-
-    # plot and animation
-    fig, ax = plt.subplots(figsize=(6,6))
-    ax.set_xlim(0, env.lx)
-    ax.set_ylim(0, env.ly)
-    ax.set_aspect("equal")
-
-    if grid_on:
-        ax.set_xticks(np.arange(0, env.lx, grid.cell_size))
-        ax.set_yticks(np.arange(0, env.ly, grid.cell_size))
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.tick_params(length=0)
-        plt.grid(which='both')
-    else:
-        ax.set_xticks([])
-        ax.set_yticks([])
-    
-    for ob in env.obs:
-        ax.add_patch(Rectangle((ob.x, ob.y), ob.w, ob.h, fc='gray', ec='k'))
-    
-    ax.plot(car.start_pos[0], car.start_pos[1], 'ro', markersize=6)
-    ax = plot_a_car(ax, end_state.model)
-    ax = plot_a_car(ax, start_state.model)
-
-    # _branches = LineCollection(branches, color='b', alpha=0.8, linewidth=1)
-    # ax.add_collection(_branches)
-
-    # _carl = PatchCollection(carl[::20], color='m', alpha=0.1, zorder=3)
-    # ax.add_collection(_carl)
-    # ax.plot(xl, yl, color='whitesmoke', linewidth=2, zorder=3)
-    # _car = PatchCollection(path[-1].model, match_original=True, zorder=4)
-    # ax.add_collection(_car)
-
-    _branches = LineCollection([], linewidth=1)
-    ax.add_collection(_branches)
-
-    _path, = ax.plot([], [], color='lime', linewidth=2)
-    _carl = PatchCollection([])
-    ax.add_collection(_carl)
-    _path1, = ax.plot([], [], color='w', linewidth=2)
-    _car = PatchCollection([])
-    ax.add_collection(_car)
-    
-    frames = len(branches) + len(path) + 1
-
-    def init():
-        _branches.set_paths([])
-        _path.set_data([], [])
-        _carl.set_paths([])
-        _path1.set_data([], [])
-        _car.set_paths([])
-
-        return _branches, _path, _carl, _path1, _car
-
-    def animate(i):
-
-        edgecolor = ['k']*5 + ['r']
-        facecolor = ['y'] + ['k']*4 + ['r']
-
-        if i < len(branches):
-            _branches.set_paths(branches[:i+1])
-            _branches.set_color(bcolors)
-        
-        else:
-            _branches.set_paths(branches)
-
-            j = i - len(branches)
-
-            _path.set_data(xl[min(j, len(path)-1):], yl[min(j, len(path)-1):])
-
-            sub_carl = carl[:min(j+1, len(path))]
-            _carl.set_paths(sub_carl[::4])
-            _carl.set_edgecolor('k')
-            _carl.set_facecolor('m')
-            _carl.set_alpha(0.1)
-            _carl.set_zorder(3)
-
-            _path1.set_data(xl[:min(j+1, len(path))], yl[:min(j+1, len(path))])
-            _path1.set_zorder(3)
-
-            _car.set_paths(path[min(j, len(path)-1)].model)
-            _car.set_edgecolor(edgecolor)
-            _car.set_facecolor(facecolor)
-            _car.set_zorder(3)
-
-        return _branches, _path, _carl, _path1, _car
-
-    ani = animation.FuncAnimation(fig, animate, init_func=init, frames=frames,
-                                  interval=1, repeat=True, blit=True)
-
-    plt.show()
-
-# Create a map grid here for Hybrid A* 
-
-class map_grid_robplan:
-    def __init__(self):
-
-        self.start_pos2 = [4, 4, 0]
-        self.end_pos2 = [4, 8, -pi]
-        # x, y, w, h. Not added everything
-        self.obs = [
-            [1.85, 0.50, 0.90, 0.30], 
-            [3.00, 0.91, 0.90, 0.30],   
-            [1.20, 1.00, 0.40, 0.80], 
-            [1.70, 1.00, 0.40, 0.80], 
-            [2.35, 1.00, 0.70, 0.80],
-            [3.65, 1.75, 0.80, 0.50]      
-        ]
         
 #3) GNC module (path-followig and PID controller for the robot) ------------------------------
 """  Robot Guidance navigation and control module 
@@ -344,12 +127,13 @@ class turtlebot_move():
         self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
         self.counter = 0                                                       # store trajectory point only at specific counter values
         self.trajectory = list()                                               # store history (trajectory driven by turtlebot3)
+        rospy.sleep(1)
 
         # track a sequence of waypoints
         # for point in WAYPOINTS:                                                # global list of wpns (xi,yi)
         for point in self.path:
             self.move_to_point(point[0], point[1])
-            rospy.sleep(1)
+            # rospy.sleep(1)    # MNK 7.4.23 COMMENTED OUT
         self.stop()
         rospy.logwarn("Action done.")
 
@@ -361,17 +145,16 @@ class turtlebot_move():
 
 
     def move_to_point(self, x, y):
-        # Here must be improved the path-following ---
-        # Compute orientation for angular vel and direction vector for linear velocity
 
         diff_x = x - self.x
         diff_y = y - self.y
         direction_vector = np.array([diff_x, diff_y])                            # vector towards new positions
-        direction_vector = direction_vector/sqrt(diff_x*diff_x + diff_y*diff_y)  # normalization
+        if direction_vector[0] != 0 and direction_vector[1] != 0:
+            direction_vector = direction_vector/sqrt(diff_x*diff_x + diff_y*diff_y)  # normalization
         theta = atan2(diff_y, diff_x)                                            # angle towards new point
 
         # We should adopt different parameters for different kinds of movement
-        self.pid_theta.setPID(1, 0.005, 0)     # P control while steering
+        self.pid_theta.setPID(1, 0.01, 0)     # PI control while steering
         self.pid_theta.setPoint(theta)
         rospy.logwarn("### PID: set target theta = " + str(theta) + " ###")
 
@@ -380,39 +163,45 @@ class turtlebot_move():
         while not rospy.is_shutdown():
             angular = self.pid_theta.update(self.theta)     # return calculated PID input
             if abs(angular) > 0.2:                          # turtlebot has not adjusted angle yet
-                angular = angular/abs(angular)*0.2          # fixed input "magnitude" when angle error is large
-            if abs(angular) < 0.01:                         # angle is within tolerance
+                angular = angular/abs(angular)*0.2          # angular input saturated at 0.2
+            if abs(angular) < 0.05:                         # angle is within tolerance # MNK 7.4.23 INCREASED TOL LIM
                 break
             self.vel.linear.x = 0               
             self.vel.angular.z = angular
             self.vel_pub.publish(self.vel)                  # publish velocity commands to turtlebot3
-            self.rate.sleep()
+            # self.rate.sleep() # MNK 7.4.23 COMMENTED OUT
 
-        # Have a rest
-        self.stop()
-        self.pid_theta.setPoint(theta)
-        self.pid_theta.setPID(1, 0.02, 0.2)  # PID control while moving
+        # self.pid_theta.setPoint(theta)     # has no effect since theta is not recalculated
+        self.pid_theta.setPID(2, 0.02, 0.2)  # PID control while moving
 
         # Move to the target point
         while not rospy.is_shutdown():
             diff_x = x - self.x
             diff_y = y - self.y
+            diff_theta = theta - self.theta
+            diff_linear = sqrt(diff_x**2 + diff_y**2)
             vector = np.array([diff_x, diff_y])
-            linear = np.dot(vector, direction_vector) # projection
-            if abs(linear) > 0.2:
-                linear = linear/abs(linear)*0.2
+            linear = np.dot(vector, direction_vector)               # projection (linear position error)
+            if abs(linear) > 0.01:               
+                linear = linear/abs(linear)*0.01                     # linear input saturated at 0.2
+            # if abs(linear) < 0.01:
+            #     linear = linear/abs(linear)*0.01                    # linear input minimum at 0.01
 
-            angular = self.pid_theta.update(self.theta)
-            if abs(angular) > 0.2:                          # fixed input "magnitude" when angular error is large
-                angular = angular/abs(angular)*0.2
-            if abs(linear) < 0.01 and abs(angular) < 0.01:  # position and angle are within tolerance
+
+            angular = self.pid_theta.update(self.theta)             # calculate angle input from PID controller
+            if abs(angular) > 0.2:                                  
+                angular = angular/abs(angular)*0.2                  # angular input saturated at 0.2
+
+            # if abs(linear) < 0.01 and abs(diff_theta) < 0.01:  # position and angle are within tolerance
+            if abs(diff_linear) < 0.05:  # position and angle are within tolerance
                 break
 
-            self.vel.linear.x = 1.5*linear   # Here can adjust speed
+            self.vel.linear.x = 1.5*linear                  # Here can adjust speed
             self.vel.angular.z = angular
             self.vel_pub.publish(self.vel)                  # publish velocity commands to turtlebot3
             self.rate.sleep()
-        self.stop()
+        # self.stop()   # MNK 7.4.23 COMMENTED OUT
+
 
     def stop(self):
         self.vel.linear.x = 0
@@ -553,25 +342,26 @@ def move_robot(task):
     Created by MNK as a general move_action between input positions given as string literals
     """
     startpos = task.split('_')[2]
-    startpos = WPNS[startpos][0:2]
+    startpos = WPNS[startpos][0:3]
     goalpos = task.split('_')[3]
-    goalpos = WPNS[goalpos][0:2]
-    print("Excuting move from (%2d,%2d) to (%2d,%2d)" % (startpos[0], startpos[1], goalpos[0], goalpos[1]))
+    goalpos = WPNS[goalpos][0:3]
+    print("Excuting move from (%2f,%2f) to (%2f,%2f)" % (startpos[0], startpos[1], goalpos[0], goalpos[1]))
 
     # Get path from path planner
     print('Computing path using A*')
     # TODO: Add path planner
-    # WAYPOINTS = [startpos,goalpos]
-    path = [startpos,goalpos]
+    heu = 1
+    my_path1 = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True)
+    path = [startpos[0:2],goalpos[0:2]]
 
     # Move robot using motion controller
     print("Executing path following")
-    turtlebot_move(path)
+    turtlebot_move(my_path1)
 
 def take_picture(task):
     # Initialize
     waypoint = task.split('_')[2]
-    theta = WPNS[waypoint]
+    theta = WPNS[waypoint][2]
 
     turn = turtle_turn(theta)       # adjust angle before taking photo
     taking_photo_exe()              # take picture
@@ -645,11 +435,45 @@ def EucledianDist():
                 dist = sqrt((WPNS[wpn1][0] - WPNS[wpn2][0])**2 + (WPNS[wpn1][1] - WPNS[wpn2][1])**2)
                 print("Distance " + wpn1 + " to " + wpn2 + ": " + str(dist))
 
+def move_sine():
+    """
+    Created by MNK to test creating a trajectory and making TB3 follow it
+    """
+    print("Initiated move sine trajectory")
+    # Create trajectory
+    curr_pos = [0.0,0.0]
+    x,y = [], []
+    for k in range(1000):
+        x.append(curr_pos[0] + sin(k/100))
+        y.append(curr_pos[1] + k/100)
+
+    xl = np.array(x)
+    yl = np.array(y)
+    path = np.column_stack([xl,yl])
+
+    # Move turtlebot
+    turtlebot_move(path)
+
+def odom_callback(msg):
+    # Get (x, y, theta) specification from odometry topic
+    quarternion = [msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,\
+                msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
+    (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(quarternion)
+
+    robot_pos_theta = yaw
+    robot_pos_x = msg.pose.pose.position.x
+    robot_pos_y = msg.pose.pose.position.y
+
+global robot_pos_x
+global robot_pos_y
+global robot_pos_theta
+
+
 # Define list of global waypoints
 global WPNS
-WPNS = {'waypoint0': [0.30, 0.30, 0.0],
-       'waypoint1':  [1.80, 0.45, pi/2],
-       'waypoint2':  [2.95, 0.95, 3*pi/2],
+WPNS = {'waypoint0': [0.40, 0.40, 0.0],
+       'waypoint1':  [1.85, 0.35, 0.0],
+       'waypoint2':  [3.00, 1.05, 0.0],
        'waypoint3':  [3.15, 2.60, 0.0],
        'waypoint4':  [4.70, 0.50, 0.0],
        'waypoint5':  [0.95, 2.50, pi],
@@ -658,6 +482,11 @@ WPNS = {'waypoint0': [0.30, 0.30, 0.0],
        'waypoint8':  [0.75, 0.40, 0.0],
        'waypoint9':  [0.75, 1.25, 0.0],
        'waypoint10': [2.90, 1.25, 0.0]}
+
+# 'waypoint0': [0.30, 0.30, 0.0],
+# 'waypoint1':  [1.80, 0.45, pi/2],
+# 'waypoint2':  [2.95, 0.95, 3*pi/2],
+
 
 
 # Define the global varible: WAYPOINTS  Wpts=[[x_i,y_i]];
@@ -693,20 +522,8 @@ if __name__ == '__main__':
         input_t=input("")
 
         rospy.init_node('turtlebot_move', anonymous=False)
+        odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
 
-        # turtle_turn(0.0)
-
-        # task = 'move_robot_waypoint7_waypoint8'
-        # if 'move_robot' in task:
-        #     move_robot(task)
-
-        # taking_photo_exe()
-
-        # task = 'move_robot_waypoint8_waypoint9'
-        # if 'move_robot' in task:
-        #     move_robot(task)
-
-        
 
 
 	# 5.1) Starting the AI Planner
