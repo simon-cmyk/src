@@ -1082,10 +1082,10 @@
       <static>1</static>
     </model>
     <state world_name='default'>
-      <sim_time>877 619000000</sim_time>
-      <real_time>391 794939165</real_time>
-      <wall_time>1712509380 394540348</wall_time>
-      <iterations>326664</iterations>
+      <sim_time>964 104000000</sim_time>
+      <real_time>87 786373530</real_time>
+      <wall_time>1712669810 329877430</wall_time>
+      <iterations>86485</iterations>
       <model name='ground_plane'>
         <pose>0 0 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -1233,23 +1233,23 @@
         </link>
       </model>
       <model name='wp0'>
-        <pose>0.099999 0.104502 -0.125001 -2e-06 5e-06 -3e-06</pose>
+        <pose>0.1 0.104503 -0.125 3e-06 1e-06 -6e-06</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>0.099999 0.104502 -0.125001 -2e-06 5e-06 -3e-06</pose>
+          <pose>0.1 0.104503 -0.125 3e-06 1e-06 -6e-06</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.524545 -0.524543 -2.15038 -1.05477 -1.05478 3.14159</acceleration>
-          <wrench>-0.524545 -0.524543 -2.15038 0 -0 0</wrench>
+          <acceleration>0.819449 -0.819462 2.1504 -0.272532 -0.272434 -0</acceleration>
+          <wrench>0.819449 -0.819462 2.1504 0 -0 0</wrench>
         </link>
       </model>
       <model name='wp1'>
-        <pose>1.8 0.7 -0 -0 -0 -2e-06</pose>
+        <pose>1.8 0.7 -0 0 0 -2e-06</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>1.8 0.7 -0 -0 -0 -2e-06</pose>
+          <pose>1.8 0.7 -0 0 0 -2e-06</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 -0 0 -0 0</acceleration>
-          <wrench>0 0 -0 0 -0 0</wrench>
+          <acceleration>0 -0 0 0 -0 0</acceleration>
+          <wrench>0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wp2'>
@@ -1258,37 +1258,37 @@
         <link name='link'>
           <pose>2.9 0.7 -0.125 0 -0 -2e-06</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 -0 -0 -0 -0</acceleration>
-          <wrench>1e-06 -0 -0 0 -0 0</wrench>
+          <acceleration>0.002976 0.008948 0 0.071579 -0.023811 0</acceleration>
+          <wrench>2.97635 8.9476 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wp3'>
-        <pose>3.25 2.7945 -0.125 -3e-06 1e-06 -2e-06</pose>
+        <pose>3.25 2.7945 -0.125001 5e-06 -2e-06 -6e-06</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>3.25 2.7945 -0.125 -3e-06 1e-06 -2e-06</pose>
+          <pose>3.25 2.7945 -0.125001 5e-06 -2e-06 -6e-06</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.819456 0.819455 2.1504 0.272476 -0.27249 0</acceleration>
-          <wrench>0.819456 0.819455 2.1504 0 -0 0</wrench>
+          <acceleration>0.524547 0.524539 -2.1504 1.05473 1.0548 -3.14159</acceleration>
+          <wrench>0.524547 0.524539 -2.1504 0 -0 0</wrench>
         </link>
       </model>
       <model name='wp4'>
-        <pose>4.88998 0.404521 -0.125 1e-06 3e-06 -0.000177</pose>
+        <pose>4.88998 0.404521 -0.125 -2e-06 -3e-06 -0.000178</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>4.88998 0.404521 -0.125 1e-06 3e-06 -0.000177</pose>
+          <pose>4.88998 0.404521 -0.125 -2e-06 -3e-06 -0.000178</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.819311 -0.819599 2.15039 -0.273629 -0.271327 -0</acceleration>
-          <wrench>0.819311 -0.819599 2.15039 0 -0 0</wrench>
+          <acceleration>-0.818732 0.815493 2.11623 0.256217 0.251258 0.002117</acceleration>
+          <wrench>-0.818732 0.815493 2.11623 0 -0 0</wrench>
         </link>
       </model>
       <model name='wp5'>
-        <pose>0.8 2.4 -0.125005 -0 -0 -0</pose>
+        <pose>0.7 2.5 -0.125005 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>0.8 2.4 -0.125005 -0 -0 -0</pose>
+          <pose>0.7 2.5 -0.125005 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 -9.8 0 -0 0</acceleration>
+          <acceleration>0 0 -9.8 -0 -0 -0</acceleration>
           <wrench>0 0 -9.8 0 -0 0</wrench>
         </link>
       </model>
