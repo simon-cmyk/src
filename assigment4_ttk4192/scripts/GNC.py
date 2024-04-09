@@ -6,6 +6,13 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from math import pi, sqrt, atan2, tan, sin, cos
 
+def ssa(angle):
+    """
+    angle = ssa(angle) returns the smallest-signed angle in [ -pi, pi )
+    """
+    angle = (angle + np.pi) % (2 * np.pi) - np.pi
+        
+    return angle 
 
 class PosControl():
     """
@@ -53,18 +60,22 @@ class PosControl():
     def move_to_point(self, target_pos):
 
         self.destination = False
-
+        self.dir = 1
         while (not self.destination):
-
-
             errorX = target_pos[0] - self.x
             errorY = target_pos[1] - self.y
             target_distance = sqrt(errorX**2 + errorY**2)
             target_theta = atan2(errorY, errorX)
-            errorTheta = target_theta - self.theta
+            errorTheta = ssa(target_theta - self.theta)
 
             robot_direction = np.array([cos(self.theta), sin(self.theta)])
             target_direction = np.array([cos(target_theta), sin(target_theta)])
+
+            if robot_direction @ target_direction < 0:
+                target_theta = ssa(target_theta + np.pi)
+                errorTheta = ssa(target_theta - self.theta) 
+                target_direction = np.array([cos(target_theta), sin(target_theta)])
+                self.dir = -1
 
             # angle error is to big (only adjust orientation until within threshold)
             if abs(errorTheta) > self.orientation_threshold and target_distance > self.DISTANCE_THRESHOLD:  # angle error is to big
@@ -89,11 +100,8 @@ class PosControl():
 
                 # adjust speed
                 if target_distance > self.DISTANCE_THRESHOLD:
-                    dir = np.dot(robot_direction, target_direction)
-                    if dir > 0.0:
-                        self.vel.linear.x = max(min(0.7*self.vel.linear.x+0.3*self.CONSTANT_LINEAR_SPEED*self.kp*target_distance, self.MAX_LINEAR_SPEED), self.MIN_LINEAR_SPEED)
-                    else:
-                        self.vel.linear.x = -max(min(0.7*self.vel.linear.x+0.3*self.CONSTANT_LINEAR_SPEED*self.kp*target_distance, self.MAX_LINEAR_SPEED), self.MIN_LINEAR_SPEED)
+                    self.vel.linear.x = max(min(0.7*self.vel.linear.x+0.3*self.CONSTANT_LINEAR_SPEED*self.kp*target_distance, self.MAX_LINEAR_SPEED), self.MIN_LINEAR_SPEED)
+                    self.vel.linear.x *= self.dir
                 else:
                     self.vel.linear.x = 0.0
                     self.vel.angular.z = 0.0
