@@ -11,8 +11,6 @@ from utils.dubins_path import DubinsPath
 from utils.astar import Astar
 from utils.utils import animate_solution, get_discretized_thetas, plotstart, round_theta, same_point, WpToCarFrame
 
-# TODO: Må fikse sånn at start og slutt vises i midten av roboten. 
-# TODO: Teste med den.
 
 """ ---------------------------------------------------------------
  Code adapted from the Course TTK4192 at NTNU

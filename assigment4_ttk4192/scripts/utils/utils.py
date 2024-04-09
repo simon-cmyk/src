@@ -116,8 +116,10 @@ def plotstart(env, car):
 
     ax = plot_a_car(ax, end_state.model)
     ax = plot_a_car(ax, start_state.model)
-    ax.plot(car.start_pos[0], car.start_pos[1], 'bo', markersize=6, label="start")
-    ax.plot(car.end_pos[0], car.end_pos[1], 'ro', markersize=6, label="end")
+    WPS = WpToCarFrame(car.start_pos, -car.l)
+    WPE = WpToCarFrame(car.end_pos, -car.l)
+    ax.plot(WPS[0], WPS[1], 'bo', markersize=6, label="start")
+    ax.plot(WPE[0], WPE[1], 'ro', markersize=6, label="end")
 
     for ob in env.obs:
         ax.add_patch(Rectangle((ob.x, ob.y), ob.w, ob.h, fc='gray', ec='k'))
@@ -150,14 +152,15 @@ def animate_solution(car, env, path, xl, yl, carl, cell_size):
     
     ax = plot_a_car(ax, end_state.model)
     ax = plot_a_car(ax, start_state.model)
-    ax.plot(car.start_pos[0], car.start_pos[1], 'ro', markersize=6)
-    ax.plot(car.start_pos[0], car.start_pos[1], 'bo', markersize=6, label="start")
-    ax.plot(car.end_pos[0], car.end_pos[1], 'ro', markersize=6, label="end")
+    WPS = WpToCarFrame(car.start_pos, -car.l)
+    WPE = WpToCarFrame(car.end_pos, -car.l)
+    ax.plot(WPS[0], WPS[1], 'bo', markersize=6, label="start")
+    ax.plot(WPE[0], WPE[1], 'ro', markersize=6, label="end", zorder=5)
     plt.legend(loc="lower right")
-    _carl = PatchCollection(carl[::20], color='m', alpha=0.1, zorder=3)
+    _carl = PatchCollection(carl[::20], match_original=True, alpha=0.1, zorder=3)
     ax.add_collection(_carl)
     ax.plot(xl, yl, color='whitesmoke', linewidth=2, zorder=3)
-    _car = PatchCollection(path[-1].model, match_original=True, zorder=4, fc="gray", ec="black")
+    _car = PatchCollection(path[-1].model, match_original=True, zorder=4, alpha=0.6, fc="gray", ec="black")
     ax.add_collection(_car)
 
     _branches = LineCollection([], linewidth=1)
@@ -203,6 +206,7 @@ def animate_solution(car, env, path, xl, yl, carl, cell_size):
         _car.set_paths(path[min(j, len(path)-1)].model)
         _car.set_edgecolor(edgecolor)
         _car.set_facecolor(facecolor)
+        _car.set_alpha(0.6)
         _car.set_zorder(3)
 
         return _branches, _path, _carl, _path1, _car
