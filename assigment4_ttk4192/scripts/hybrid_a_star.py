@@ -9,7 +9,7 @@ from utils.node import Node
 from utils.environment import Environment_robplan
 from utils.dubins_path import DubinsPath
 from utils.astar import Astar
-from utils.utils import animate_solution, get_discretized_thetas, plotstart, round_theta, same_point, WpToCarFrame
+from utils.utils import animate_solution, get_discretized_thetas, plotstart, round_theta, same_point
 
 
 """ ---------------------------------------------------------------
@@ -46,11 +46,11 @@ class HybridAstar:
         self.astar = Astar(self.grid, self.goal[:2])
 
         # All are weights for choosing heuristic. (default in the comments) 
-        self.w1 = 0.95 # 0.95 astar heuristic
+        self.w1 = 1.50 # 0.95 astar heuristic
         self.w2 = 0.05 # 0.05 simple heuristic
-        self.w3 = 0.30 # 0.30 extra cost of steering angle change
+        self.w3 = 0.40 # 0.30 extra cost of steering angle change
         self.w4 = 0.10 # 0.10 extra cost of turning
-        self.w5 = 0.50 # 2.00 extra cost of reversing
+        self.w5 = 1.00 # 2.00 extra cost of reversing
 
         self.thetas = get_discretized_thetas(self.unit_theta)
     
@@ -79,7 +79,7 @@ class HybridAstar:
         if temp is not None:
             h1 = self.astar.search_path(pos[:2]) * self.grid.cell_size
         else:
-            h1 = 100
+            h1 = 1000000000
         h2 = self.simple_heuristic(pos[:2])
         
         return self.w1*h1 + self.w2*h2
@@ -169,7 +169,7 @@ class HybridAstar:
         
         return list(reversed(route))
     
-    def search_path(self, heu=1, extra=False):
+    def search_path(self, heu=1, extra=True):
         """ Hybrid A* pathfinding. """
 
         root = self.construct_node(self.start)
@@ -237,15 +237,15 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
     l = 0.281
     w = 0.306
     max_phi = pi/4
-    start_pos, end_pos = WpToCarFrame(start_pos, l), WpToCarFrame(end_pos, l)
+    start_pos, end_pos
     tc = map_grid_robplan()
   
     env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.02)
     car = RoboCar(env, start_pos, end_pos, l, max_phi, w)
     grid = Grid_robplan(env, cell_size=0.1)
 
-    if visualize == True:
-        plotstart(env, car)
+    # if visualize == True:
+    #     plotstart(env, car)
 
     hastar = HybridAstar(car, grid, reverse, unit_theta=pi/12, dt=1e-2, check_dubins=True)
 
@@ -267,15 +267,14 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
 
     return Wpts
 
-global WAYPOINT 
 WAYPOINT = [
                 [0.30, 0.30, pi/2],
                 [1.85, 0.35, 0],
                 [3.00, 1.05, 0],
-                [3.25, 2.48, pi],
-                [4.65, 0.70, 0],
-                [0.95, 2.60, pi],
-                [3.60, 1.40, pi]
+                [3.25, 2.50, pi],
+                [4.65, 0.75, pi],
+                [1.05, 2.60, pi],
+                [3.60, 1.50, 0]
             ]
 
 if __name__ == '__main__':
@@ -305,5 +304,5 @@ if __name__ == '__main__':
 
     start_pos   = WAYPOINT[5]      
     end_pos     = WAYPOINT[6]
-    my_path2 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    my_path6 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
 

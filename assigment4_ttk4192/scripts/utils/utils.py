@@ -116,10 +116,10 @@ def plotstart(env, car):
 
     ax = plot_a_car(ax, end_state.model)
     ax = plot_a_car(ax, start_state.model)
-    WPS = WpToCarFrame(car.start_pos, -car.l)
-    WPE = WpToCarFrame(car.end_pos, -car.l)
-    ax.plot(WPS[0], WPS[1], 'bo', markersize=6, label="start")
-    ax.plot(WPE[0], WPE[1], 'ro', markersize=6, label="end")
+    WPS_t = WpToCarFrame(car.start_pos, 0)
+    WPE_t = WpToCarFrame(car.end_pos, 0)
+    ax.plot(WPS_t[0], WPS_t[1], 'bo', markersize=6, label="start")
+    ax.plot(WPE_t[0], WPE_t[1], 'ro', markersize=6, label="end")
 
     for ob in env.obs:
         ax.add_patch(Rectangle((ob.x, ob.y), ob.w, ob.h, fc='gray', ec='k'))
@@ -152,10 +152,10 @@ def animate_solution(car, env, path, xl, yl, carl, cell_size):
     
     ax = plot_a_car(ax, end_state.model)
     ax = plot_a_car(ax, start_state.model)
-    WPS = WpToCarFrame(car.start_pos, -car.l)
-    WPE = WpToCarFrame(car.end_pos, -car.l)
-    ax.plot(WPS[0], WPS[1], 'bo', markersize=6, label="start")
-    ax.plot(WPE[0], WPE[1], 'ro', markersize=6, label="end", zorder=5)
+    WPS_t = WpToCarFrame(car.start_pos, 0)
+    WPE_t = WpToCarFrame(car.end_pos, 0)
+    ax.plot(WPS_t[0], WPS_t[1], 'bo', markersize=6, label="start")
+    ax.plot(WPE_t[0], WPE_t[1], 'ro', markersize=6, label="end", zorder=5)
     plt.legend(loc="lower right")
     _carl = PatchCollection(carl[::20], match_original=True, alpha=0.1, zorder=3)
     ax.add_collection(_carl)
