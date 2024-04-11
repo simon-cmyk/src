@@ -49,7 +49,7 @@ class HybridAstar:
         self.w1 = 1.50 # 0.95 astar heuristic
         self.w2 = 0.05 # 0.05 simple heuristic
         self.w3 = 0.40 # 0.30 extra cost of steering angle change
-        self.w4 = 0.10 # 0.10 extra cost of turning
+        self.w4 = 0.20 # 0.10 extra cost of turning
         self.w5 = 1.00 # 2.00 extra cost of reversing
 
         self.thetas = get_discretized_thetas(self.unit_theta)
@@ -257,7 +257,7 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
         print('No valid path!')
         return
     # a post-processing is required to have path list
-    path = path[::5] + [path[-1]]
+    path = path[:-1:5] + [path[-1]]
 
     Wpts = np.array([list(p.pos) for p in path])
     carl = [p.model[0] for p in path]

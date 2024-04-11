@@ -319,7 +319,7 @@ WPNS = {'waypoint0': [0.40, 0.40, 0.0],
        'waypoint1':  [1.85, 0.30, 0.0],
        'waypoint2':  [3.00, 1.10, 0.0],
        'waypoint3':  [3.75, 2.60, pi],
-       'waypoint4':  [4.60, 0.75, -pi],
+       'waypoint4':  [4.60, 0.75, 0.0],
        'waypoint5':  [1.35, 2.60, pi],
        'waypoint6':  [3.60, 1.50, 0]
         }
@@ -369,19 +369,17 @@ if __name__ == '__main__':
         # i_ini=0
 
         rospy.sleep(1)
-
+        # path0 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint4'], True, True, True)
+        # print(len(path0))
         path1 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint1'], True, True, True)
-        path2 = main_hybrid_a(1, WPNS['waypoint1'], WPNS['waypoint2'], True, True, True)
-        path3 = main_hybrid_a(1, WPNS['waypoint2'], WPNS['waypoint3'], True, True, True)
-        path4 = main_hybrid_a(1, WPNS['waypoint3'], WPNS['waypoint4'], True, True, True)
-        path5 = main_hybrid_a(1, WPNS['waypoint4'], WPNS['waypoint5'], True, True, True)
-        path6 = main_hybrid_a(1, WPNS['waypoint5'], WPNS['waypoint6'], True, True, True)
         PosControl(path1)
+        path2 = main_hybrid_a(1, WPNS['waypoint1'], WPNS['waypoint2'], True, True, True)
         PosControl(path2)
+        path3 = main_hybrid_a(1, WPNS['waypoint3'], WPNS['waypoint5'], True, True, True)
         PosControl(path3)
+        path4 = main_hybrid_a(1, WPNS['waypoint5'], WPNS['waypoint3'], True, True, True)
         PosControl(path4)
-        PosControl(path5)
-        PosControl(path6)
+
     
         # PosControl([[1.4, 0.4],[0.8, 0.4]])
         # task_total = ["move_robot_waypoint0_waypoint2",

@@ -40,8 +40,8 @@ class PosControl():
         self.MIN_LINEAR_SPEED = 0.01
         self.MAX_ORIENTATION_SPEED = 0.2
         self.DISTANCE_THRESHOLD = 0.05
-        self.ORIENTATION_THRESHOLD_LOW = 0.07
-        self.ORIENTATION_THRESHOLD_HIGH = 0.3
+        self.ORIENTATION_THRESHOLD_LOW = 0.05
+        self.ORIENTATION_THRESHOLD_HIGH = 0.2
         self.orientation_threshold = self.ORIENTATION_THRESHOLD_LOW
 
         # track a sequence of waypoints
@@ -61,7 +61,7 @@ class PosControl():
     def move_to_point(self, target_pos):
 
         self.destination = False
-        self.dir = 1
+        self.dir = 8.0
         while (not self.destination):
             errorX = target_pos[0] - self.x
             errorY = target_pos[1] - self.y
@@ -74,12 +74,12 @@ class PosControl():
 
             if robot_direction @ target_direction < 0:
                 target_theta = ssa(target_theta + np.pi)
-                errorTheta = ssa(target_theta - self.theta) 
                 target_direction = np.array([cos(target_theta), sin(target_theta)])
-                self.dir = -1
+                errorTheta = ssa(target_theta - self.theta) 
+                self.dir = -8.0
 
             # angle error is to big (only adjust orientation until within threshold)
-            if abs(errorTheta) > self.orientation_threshold and target_distance > self.DISTANCE_THRESHOLD:  # angle error is to big
+            if abs(errorTheta) > self.orientation_threshold and (target_distance > self.DISTANCE_THRESHOLD):  # angle error is to big
                 self.orientation_threshold = self.ORIENTATION_THRESHOLD_LOW
 
                 # adjust orientation
@@ -112,11 +112,8 @@ class PosControl():
             if self.vel.angular.z > self.MAX_ORIENTATION_SPEED:                                   # limit orientation speed
                 self.vel.angular.z = self.vel.angular.z/abs(self.vel.angular.z)*self.MAX_ORIENTATION_SPEED
 
-            if self.vel.linear.x > self.MAX_LINEAR_SPEED:                                        # limit linear speed
+            if abs(self.vel.linear.x) > self.MAX_LINEAR_SPEED:                                        # limit linear speed
                 self.vel.linear.x = self.vel.linear.x/abs(self.vel.linear.x)*self.MAX_LINEAR_SPEED
-                
-            if self.dir == -1:
-                self.vel.linear.x = self.vel.linear.x*self.CONSTANT_REVERSE_SPEED
 
             self.vel_pub.publish(self.vel)
             self.rate.sleep()
