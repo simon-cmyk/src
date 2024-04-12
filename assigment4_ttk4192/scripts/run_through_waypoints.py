@@ -27,11 +27,8 @@ from cv_bridge import CvBridge, CvBridgeError
 import shutil
 import copy
 import time
-from utils.environment import Environment_robplan
-from utils.car import SimpleCar
-from utils.grid import Grid_robplan
 # Import here the packages used in your codes
-from hybrid_a_star import HybridAstar, main_hybrid_a
+from hybrid_a_star import main_hybrid_a
 from GNC import PosControl
 
 """ ----------------------------------------------------------------------------------
@@ -224,7 +221,7 @@ class turtle_turn():
         self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
         self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
         self.vel = Twist()                                                     # vector3 linear, vector3 angular
-        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
+        self.rate = rospy.Rate(25)                                             # update frequency of velocity commands
 
 
         self.turn_robot()
@@ -319,7 +316,7 @@ WPNS = {'waypoint0': [0.40, 0.40, 0.0],
        'waypoint1':  [1.85, 0.30, 0.0],
        'waypoint2':  [3.00, 1.10, 0.0],
        'waypoint3':  [3.75, 2.60, pi],
-       'waypoint4':  [4.60, 0.75, 0.0],
+       'waypoint4':  [4.55, 0.75, 0.0],
        'waypoint5':  [1.35, 2.60, pi],
        'waypoint6':  [3.60, 1.50, 0]
         }
@@ -368,16 +365,16 @@ if __name__ == '__main__':
         # task_total=len(plan_general)
         # i_ini=0
 
-        rospy.sleep(1)
-        # path0 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint4'], True, True, True)
-        # print(len(path0))
-        path1 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint1'], True, True, True)
+        # rospy.sleep(1)
+        path0 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint4'], True, True, True)
+        print(len(path0))
+        path1 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint4'], True, True, True)
         PosControl(path1)
-        path2 = main_hybrid_a(1, WPNS['waypoint1'], WPNS['waypoint2'], True, True, True)
+        path2 = main_hybrid_a(1, WPNS['waypoint4'], WPNS['waypoint3'], True, True, True)
         PosControl(path2)
-        path3 = main_hybrid_a(1, WPNS['waypoint3'], WPNS['waypoint5'], True, True, True)
+        path3 = main_hybrid_a(1, WPNS['waypoint3'], WPNS['waypoint5'], True, True, False)
         PosControl(path3)
-        path4 = main_hybrid_a(1, WPNS['waypoint5'], WPNS['waypoint3'], True, True, True)
+        path4 = main_hybrid_a(1, WPNS['waypoint5'], WPNS['waypoint3'], True, True, False)
         PosControl(path4)
 
     

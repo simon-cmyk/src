@@ -23,11 +23,11 @@ class PosControl():
 
         self.path = path
 
+        self.counter = 0                                                       # store trajectory point only at specific counter values
         self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
         self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
         self.vel = Twist()                                                     # vector3 linear, vector3 angular
-        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
-        self.counter = 0                                                       # store trajectory point only at specific counter values
+        self.rate = rospy.Rate(25)                                             # update frequency of velocity commands
         self.trajectory = list()                                               # store history (trajectory driven by turtlebot3)
         rospy.sleep(1)
 
@@ -39,7 +39,7 @@ class PosControl():
         self.MAX_LINEAR_SPEED = 0.2
         self.MIN_LINEAR_SPEED = 0.01
         self.MAX_ORIENTATION_SPEED = 0.2
-        self.DISTANCE_THRESHOLD = 0.05
+        self.DISTANCE_THRESHOLD = 0.07
         self.ORIENTATION_THRESHOLD_LOW = 0.05
         self.ORIENTATION_THRESHOLD_HIGH = 0.2
         self.orientation_threshold = self.ORIENTATION_THRESHOLD_LOW
@@ -72,11 +72,13 @@ class PosControl():
             robot_direction = np.array([cos(self.theta), sin(self.theta)])
             target_direction = np.array([cos(target_theta), sin(target_theta)])
 
-            if robot_direction @ target_direction < 0:
-                target_theta = ssa(target_theta + np.pi)
+            if robot_direction @ target_direction < -0.1:
+                target_theta = target_theta + np.pi
                 target_direction = np.array([cos(target_theta), sin(target_theta)])
                 errorTheta = ssa(target_theta - self.theta) 
                 self.dir = -8.0
+            elif self.dir < 0:
+                self.dir = 8.0
 
             # angle error is to big (only adjust orientation until within threshold)
             if abs(errorTheta) > self.orientation_threshold and (target_distance > self.DISTANCE_THRESHOLD):  # angle error is to big
@@ -117,6 +119,7 @@ class PosControl():
 
             self.vel_pub.publish(self.vel)
             self.rate.sleep()
+        # Check that you have right pose
 
     def stop(self):
         self.vel.linear.x = 0

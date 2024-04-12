@@ -44,3 +44,5 @@ du kan spørre om hvordan "the mission" som skal utføres blir definert med tank
 
 * ideas for reactive implementation? Replanning or? 
 * Lab pc. Can we test on our own? 
+* Reversing the car -> We only give the path -> Leads to funky behaviour.
+Svar: 
