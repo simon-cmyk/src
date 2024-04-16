@@ -32,7 +32,7 @@ from utils.car import SimpleCar
 from utils.grid import Grid_robplan
 # Import here the packages used in your codes
 from hybrid_a_star import HybridAstar, main_hybrid_a
-from GNC import PosControl, PID
+from GNC import PosControl, PID, turtle_turn
 import actionlib
 import control_msgs.msg
 import trajectory_msgs.msg
@@ -164,10 +164,7 @@ def move_gripper(joints_pos, execution_time_secs=1):
 
     return action_client.get_result()
 
-# Charging battery 
-def charge_battery_waypoint0():
-    print("chargin battert")
-    time.sleep(5)
+
 
 def move_robot(task):
     """
@@ -200,62 +197,7 @@ def take_picture(task):
     turtle_turn(theta)              # adjust angle before taking photo
     taking_photo_exe()              # take picture
 
-class turtle_turn():
-    """
-    Created by MNK as a method to orientate the robot before taking an image
-    """
-    def __init__(self, theta_sp):
-        rospy.on_shutdown(self.stop)
 
-        self.theta = 0.0
-        self.theta_sp = theta_sp
-        self.pid_theta = PID(0,0,0)  # initialization
-
-        self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
-        self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
-        self.vel = Twist()                                                     # vector3 linear, vector3 angular
-        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
-
-
-        self.turn_robot()
-        self.stop()
-        rospy.logwarn("Turning done.")
-
-    def turn_robot(self):
-        print("Executing Make a turn")
-        time.sleep(1)
-
-        # TODO: Turn robot
-        self.pid_theta.setPID(1, 0, 0)     # P control while steering
-        self.pid_theta.setPoint(self.theta_sp)
-        rospy.logwarn("### PID: set target theta = " + str(self.theta_sp) + " ###")
-
-        # Adjust orientation first
-        while not rospy.is_shutdown():
-            angular = self.pid_theta.update(self.theta)     # return calculated PID input
-            if abs(angular) > 0.2:                          # turtlebot has not adjusted angle yet
-                angular = angular/abs(angular)*0.2          # fixed input "magnitude" when angle error is large
-            if abs(angular) < 0.01:                         # angle is within tolerance
-                break
-            self.vel.linear.x = 0               
-            self.vel.angular.z = angular
-            self.vel_pub.publish(self.vel)                  # publish velocity commands to turtlebot3
-            self.rate.sleep()
-
-        self.stop()
-
-    def stop(self):
-        self.vel.linear.x = 0
-        self.vel.angular.z = 0
-        self.vel_pub.publish(self.vel)
-        rospy.sleep(1)
-
-    def odom_callback(self, msg):
-        # Get (x, y, theta) specification from odometry topic
-        quarternion = [msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,\
-                    msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
-        (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(quarternion)
-        self.theta = yaw
 
 
 

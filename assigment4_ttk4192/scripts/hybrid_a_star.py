@@ -230,7 +230,6 @@ class HybridAstar:
                     
                     open_.remove(child)
                     open_.append(child)
-
         return None, None
 
 def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
@@ -256,7 +255,7 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
     if not path:
         raise Exception
     # a post-processing is required to have path list
-    path = path[:-1] + [path[-1]]
+    path = path[:-1:7] + [path[-1]]
 
     Wpts = np.array([list(p.pos) for p in path])
     carl = [p.model[0] for p in path]
@@ -279,29 +278,29 @@ WAYPOINT = [
 if __name__ == '__main__':
     print("Executing hybrid A* algorithm")
 
-    heu         = 1 
-    start_pos   = WAYPOINT[0]       # Here defined initial position [x,y,angle]
-    end_pos     = WAYPOINT[1]       # Target point                  [x,y, angle]
+    # heu         = 1 
+    # start_pos   = WAYPOINT[0]       # Here defined initial position [x,y,angle]
+    # end_pos     = WAYPOINT[1]       # Target point                  [x,y, angle]
 
-    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    # my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
 
-    start_pos   = WAYPOINT[1]      
-    end_pos     = WAYPOINT[2]
-    my_path2 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    # start_pos   = WAYPOINT[1]      
+    # end_pos     = WAYPOINT[2]
+    # my_path2 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
     
-    start_pos   = WAYPOINT[2]      
-    end_pos     = WAYPOINT[3]
-    my_path3 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    # start_pos   = WAYPOINT[2]      
+    # end_pos     = WAYPOINT[3]
+    # my_path3 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
     
-    start_pos   = WAYPOINT[3]      
-    end_pos     = WAYPOINT[4]
-    my_path4 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    # start_pos   = WAYPOINT[3]      
+    # end_pos     = WAYPOINT[4]
+    # my_path4 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
 
-    start_pos   = WAYPOINT[4]      
-    end_pos     = WAYPOINT[5]
-    my_path5 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    # start_pos   = WAYPOINT[4]      
+    # end_pos     = WAYPOINT[5]
+    # my_path5 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
 
-    start_pos   = WAYPOINT[5]      
-    end_pos     = WAYPOINT[6]
-    my_path6 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    # start_pos   = WAYPOINT[5]      
+    # end_pos     = WAYPOINT[6]
+    # my_path6 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
 

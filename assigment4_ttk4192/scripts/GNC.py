@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from math import pi, sqrt, atan2, tan, sin, cos
+import time
 
 def ssa(angle):
     """
@@ -45,17 +46,27 @@ class PosControl():
         self.orientation_threshold = self.ORIENTATION_THRESHOLD_LOW
 
         # track a sequence of waypoints
-        # for point in WAYPOINTS:                                                # global list of wpns (xi,yi)
+        # for point in WAYPOINTS: 
+        st = time.perf_counter()                                               # global list of wpns (xi,yi)
         for point in self.path:
             self.move_to_point(point)
             # rospy.sleep(1)    # MNK 7.4.23 COMMENTED OUT
+        et = time.perf_counter()
         self.stop()
         rospy.logwarn("Action done.")
 
         # plot trajectory
         data = np.array(self.trajectory)                                       # visualize driven trajectory
         np.savetxt('trajectory.csv', data, fmt='%f', delimiter=',')
-        plt.plot(data[:,0],data[:,1])
+        plt.figure()
+        plt.plot(data[:,0],data[:,1], 'k', label="path taken")
+        plt.plot(data[0, 0], data[0, 1], 'r',marker='o',label="start")
+        plt.plot(data[-1, 0], data[-1, 1], 'b', marker='o',label="end")
+        plt.plot(self.path[:, 0], self.path[:, 1], 'g', label="planned path")
+        plt.legend()
+        plt.title(f"Action took {et - st} seconds")
+        plt.tight_layout()
+        plt.savefig('trajectory.png')
         plt.show()
 
     def move_to_point(self, target_pos):
@@ -83,23 +94,20 @@ class PosControl():
             # angle error is to big (only adjust orientation until within threshold)
             if abs(errorTheta) > self.orientation_threshold and (target_distance > self.DISTANCE_THRESHOLD):  # angle error is to big
                 self.orientation_threshold = self.ORIENTATION_THRESHOLD_LOW
-
-                # adjust orientation
-                if target_theta > self.theta:
-                    self.vel.angular.z = self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
-                else:
-                    self.vel.angular.z = -self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
-                self.vel.linear.x = 0.0
+                self.vel.angular.z = 2*self.kp*errorTheta*self.CONSTANT_ANGULAR_SPEED
+            #     # adjust orientation
+            #     if target_theta > self.theta:
+            #         self.vel.angular.z = self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
+            #     else:
+            #         self.vel.angular.z = -self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
+            #     self.vel.linear.x = 0.0
                 
-            # move towards target position adjusting speed and orientation
+            # # move towards target position adjusting speed and orientation
             else:
                 self.orientation_threshold = self.ORIENTATION_THRESHOLD_HIGH
 
                 # adjust orientation
-                if target_theta > self.theta:
-                    self.vel.angular.z = 2*self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
-                else:
-                    self.vel.angular.z = -2*self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
+                self.vel.angular.z = 2*self.kp*errorTheta*self.CONSTANT_ANGULAR_SPEED
 
                 # adjust speed
                 if target_distance > self.DISTANCE_THRESHOLD:
@@ -186,3 +194,61 @@ class PID:
         self.Kp = set_P
         self.Ki = set_I
         self.Kd = set_D
+
+
+class turtle_turn():
+    """
+    Created by MNK as a method to orientate the robot before taking an image
+    """
+    def __init__(self, theta_sp):
+        rospy.on_shutdown(self.stop)
+
+        self.theta = 0.0
+        self.theta_sp = theta_sp
+        self.pid_theta = PID(0,0,0)  # initialization
+
+        self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
+        self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
+        self.vel = Twist()                                                     # vector3 linear, vector3 angular
+        self.rate = rospy.Rate(25)                                             # update frequency of velocity commands
+
+
+        self.turn_robot()
+        self.stop()
+        rospy.logwarn("Turning done.")
+
+    def turn_robot(self):
+        print("Executing Make a turn")
+        time.sleep(1)
+
+        # TODO: Turn robot
+        self.pid_theta.setPID(1, 0, 0)     # P control while steering
+        self.pid_theta.setPoint(self.theta_sp)
+        rospy.logwarn("### PID: set target theta = " + str(self.theta_sp) + " ###")
+
+        # Adjust orientation first
+        while not rospy.is_shutdown():
+            angular = self.pid_theta.update(self.theta)     # return calculated PID input
+            if abs(angular) > 0.2:                          # turtlebot has not adjusted angle yet
+                angular = angular/abs(angular)*0.2          # fixed input "magnitude" when angle error is large
+            if abs(angular) < 0.01:                         # angle is within tolerance
+                break
+            self.vel.linear.x = 0               
+            self.vel.angular.z = angular
+            self.vel_pub.publish(self.vel)                  # publish velocity commands to turtlebot3
+            self.rate.sleep()
+
+        self.stop()
+
+    def stop(self):
+        self.vel.linear.x = 0
+        self.vel.angular.z = 0
+        self.vel_pub.publish(self.vel)
+        rospy.sleep(1)
+
+    def odom_callback(self, msg):
+        # Get (x, y, theta) specification from odometry topic
+        quarternion = [msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,\
+                    msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
+        (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(quarternion)
+        self.theta = yaw
