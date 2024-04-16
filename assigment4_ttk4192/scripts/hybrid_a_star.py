@@ -254,10 +254,9 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
     print('Total time: {}s'.format(round(time.time()-t, 3)))
     
     if not path:
-        print('No valid path!')
-        return
+        raise Exception
     # a post-processing is required to have path list
-    path = path[:-1:5] + [path[-1]]
+    path = path[:-1] + [path[-1]]
 
     Wpts = np.array([list(p.pos) for p in path])
     carl = [p.model[0] for p in path]
