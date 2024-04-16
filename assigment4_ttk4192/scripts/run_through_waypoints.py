@@ -12,6 +12,7 @@ import re
 import fileinput
 import sys
 import argparse
+from geometry_msgs.msg import PoseStamped
 import random
 import matplotlib.animation as animation
 from datetime import datetime
@@ -38,7 +39,6 @@ characteristics: AI planning,GNC, hybrid A*, ROS.
 robot: Turtlebot3
 version: 1.1
 """ 
-
 
 # 1) Program here your AI planner (only one) ------------------------------------------------------------
 """
@@ -144,7 +144,6 @@ def move_robot_waypoint0_waypoint1():
     end_pos = [6, 6, 3*pi/4]
     main_hybrid_a(args.heu,start_pos,end_pos,args.r,args.e,args.g)
     print("Executing path following")
-    turtlebot_move()
 
 
 def Manipulate_OpenManipulator_x():
@@ -276,24 +275,6 @@ def EucledianDist():
                 dist = sqrt((WPNS[wpn1][0] - WPNS[wpn2][0])**2 + (WPNS[wpn1][1] - WPNS[wpn2][1])**2)
                 print("Distance " + wpn1 + " to " + wpn2 + ": " + str(dist))
 
-def move_sine():
-    """
-    Created by MNK to test creating a trajectory and making TB3 follow it
-    """
-    print("Initiated move sine trajectory")
-    # Create trajectory
-    curr_pos = [0.0,0.0]
-    x,y = [], []
-    for k in range(1000):
-        x.append(curr_pos[0] + sin(k/100))
-        y.append(curr_pos[1] + k/100)
-
-    xl = np.array(x)
-    yl = np.array(y)
-    path = np.column_stack([xl,yl])
-
-    # Move turtlebot
-    turtlebot_move(path)
 
 def odom_callback(msg):
     # Get (x, y, theta) specification from odometry topic
@@ -330,7 +311,7 @@ if __name__ == '__main__':
         print("************ TTK4192 - Assigment 4 **************************")
         print()
         print("AI planners: STP/GraphPlan/Other")
-        print("Path-finding: Hybrid A-star/A*/other")
+        print("Path-finding: Hybrid A-star/A*")
         print("GNC Controller: PID path-following")
         print("Robot: Turtlebot3 waffle-pi")
         print("date: 19.03.24")
@@ -342,8 +323,6 @@ if __name__ == '__main__':
 
         rospy.init_node('turtlebot_move', anonymous=False)
         odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
-
-
 
 	# 5.1) Starting the AI Planner
        #Here you must run your AI planner module
@@ -366,12 +345,13 @@ if __name__ == '__main__':
         # i_ini=0
 
         # rospy.sleep(1)
-        path0 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint4'], True, True, True)
-        print(len(path0))
-        path1 = main_hybrid_a(1, WPNS['waypoint0'], WPNS['waypoint4'], True, True, True)
-        PosControl(path1)
-        path2 = main_hybrid_a(1, WPNS['waypoint4'], WPNS['waypoint3'], True, True, True)
-        PosControl(path2)
+        try:
+            path2 = main_hybrid_a(1, WPNS['waypoint4'], WPNS['waypoint3'], True, True, True)
+            PosControl(path2)
+        except:
+            print("No valid path, trying A*!")
+            # Try A* star
+
         path3 = main_hybrid_a(1, WPNS['waypoint3'], WPNS['waypoint5'], True, True, False)
         PosControl(path3)
         path4 = main_hybrid_a(1, WPNS['waypoint5'], WPNS['waypoint3'], True, True, False)
