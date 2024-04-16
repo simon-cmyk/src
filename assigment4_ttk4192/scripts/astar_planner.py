@@ -20,6 +20,7 @@ class Graph:
         self.start = None
         self.goal = None
         self.obstacle_map = np.zeros([self.arr.shape[0], self.arr.shape[1]])
+        self.obstacle_map_inflated = np.zeros([self.arr.shape[0], self.arr.shape[1]])
         goal_color = np.array([255, 0, 0, 255])
         start_color = np.array([0, 255, 0, 255])
         obstacle_color = np.array([0, 0, 0, 255])
@@ -34,21 +35,38 @@ class Graph:
         for i in range(self.arr.shape[0]):
             for j in range(self.arr.shape[1]):
                 pixel = self.arr[i][j]
-                if np.array_equal(pixel, goal_color):
-                    self.goal = [i, j]
-                    self.nodes.append(tuple(self.goal))
-                    self.arr[i][j] = np.array(VERMILLION)
 
-                elif np.array_equal(pixel, start_color):
-                    self.start = [i, j]
-                    self.nodes.append(tuple(self.start))
-                    self.arr[i][j] = np.array(BLUE_GREEN)
-
-                elif np.array_equal(pixel, obstacle_color):
+                if np.array_equal(pixel, obstacle_color):
                     self.obstacle_map[i][j] = 1
 
                 else:
                     self.nodes.append((i, j))
+
+        self.inflate_obstacles(self.img)
+
+
+    def inflate_obstacles(self,img):
+        safe_dist = 20    # inflation distance TODO: change to be parameter
+        x_max = self.arr.shape[0]-1
+        y_max = self.arr.shape[1]-1
+        for i in range(self.arr.shape[0]):
+            for j in range(self.arr.shape[1]):
+                if self.obstacle_map[i][j] == 1:
+                    x1 = max(0,i-safe_dist)
+                    x2 = min(x_max,i+safe_dist)
+                    y1 = max(0,j-safe_dist)
+                    y2 = min(y_max,j+safe_dist)
+                    self.obstacle_map_inflated[x1:x2+1,y1:y2+1] = np.ones([x2-x1+1, y2-y1+1])
+
+        # Put obstacle clearance at the map border
+        self.obstacle_map_inflated[0:x_max+1,0:safe_dist] = np.ones([x_max+1, safe_dist])
+        self.obstacle_map_inflated[0:x_max+1,y_max-safe_dist+1:y_max+1] = np.ones([x_max+1, safe_dist])
+        self.obstacle_map_inflated[0:safe_dist,0:y_max+1] = np.ones([safe_dist,y_max+1])
+        self.obstacle_map_inflated[x_max-safe_dist+1:x_max+1,0:y_max+1] = np.ones([safe_dist,y_max+1])
+        pass
+
+
+
 
     def get_list_of_nodes(self):
         return self.nodes
@@ -57,12 +75,14 @@ class Graph:
 
         neighbors = []
 
-        for x, y in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
+        # for x, y in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
+        for x, y in [[-1, 0], [1, 0], [0, -1], [0, 1], [-1,-1], [-1,1], [1,-1], [1,1]]:
             try:
                 potential_neighbor = [node[0] + x, node[1] + y]
                 if potential_neighbor[0] < 0 or potential_neighbor[1] < 0:
                     continue
-                if self.obstacle_map[potential_neighbor[0]][potential_neighbor[1]] == 0:
+                # if self.obstacle_map[potential_neighbor[0]][potential_neighbor[1]] == 0:
+                if self.obstacle_map_inflated[potential_neighbor[0]][potential_neighbor[1]] == 0:
                     neighbors.append(tuple(potential_neighbor))
 
             except IndexError:
@@ -93,28 +113,27 @@ class Graph:
 
     def get_goal_node(self):
         return self.goal
+    
+    def set_start_node(self, node):
+        self.start = node
+        self.arr[node[0]][node[1]] = np.array(VERMILLION)
+
+    def set_goal_node(self, node):
+        self.goal = node
+        self.arr[node[0]][node[1]] = np.array(VERMILLION)
 
 
-# You should only need to use the following functions to implement A*:
-# Graph(path_to_map) # path_to_map can, for instance, be 'maps/map1.png'
-# graph.get_list_of_nodes()
-# graph.get_neighbors(node)
-# graph.get_start_node()
-# graph.get_goal_node()
 
-# For visualizing the algorithm use the following functions:
-# graph.add_visited_node(node) # Use this when you are visiting a new node to update the visualization
-# graph.add_shortest_path(path) # Use this to visualize the shortest path after you have found it.
-
-def a_star(graph, heuristic_function=None):
-    # Here you need to implement A*. The implementation should return the path from start to goal, in the form of a
-    # sequential list of nodes in the path.
+def a_star(graph, start_node, goal_node, heuristic_function=None):
 
     dist = {}           # dictionary storing shortest distance to node u
     prev = {}           # dictionary storing parent of node u
     Q = []              # nodes that are not yet discovered
     Frontier = []       # nodes at frontier are candidate shortest distance nodes
     visited = 0         # number of nodes explored
+
+    graph.set_start_node(start_node)
+    graph.set_goal_node(goal_node)
 
     # initialize dist, prev and Q
     for node in graph.get_list_of_nodes():
@@ -150,11 +169,29 @@ def a_star(graph, heuristic_function=None):
     node = graph.get_goal_node()
     while tuple(node) != tuple(graph.get_start_node()):
         path.append(node)
-        node = tuple(prev[tuple(node)])
+        if prev[tuple(node)] == None:
+            print("Failure: Goal is not reachable")
+            return [], visited
+        else:
+            node = tuple(prev[tuple(node)])
 
     path.append(graph.get_start_node())
 
+    graph.add_shortest_path(path)
+
     return path, visited
+
+def mirror_coordinate(point, h, scale):
+    return [scale*point[1], h-scale*point[0]]
+
+def mirrior_plan(path, height, scale):
+    """mirror path: i.e. origin of GNC is bottom-left while A* origin is top_left
+       map scale is different: i.e. GNC in meters, A* in pixels => 1m = 100pxl"""
+    reverse_path = []
+    for point in path:
+        reverse_path.insert(0, mirror_coordinate(point,height,scale))
+
+    return reverse_path
 
 def heuristic_euclidean(graph, node):
     goal = graph.get_goal_node()
@@ -169,8 +206,10 @@ def heuristic_diagonal(graph, node):
     return min(abs(goal[0] - node[0]), abs(goal[1] - node[1]))
 
 if __name__ == "__main__":
-    graph = Graph('maps/map5.png')
-    path, visited = a_star(graph, heuristic_function=heuristic_manhattan)
+    graph = Graph('maps/map_ttk4192CA4_SG.png')
+    start_node = [250,40]
+    goal_node = [30,370]
+    path, visited = a_star(graph,start_node,goal_node, heuristic_function=heuristic_euclidean)
 
     graph.add_shortest_path(path)
     print(visited)
