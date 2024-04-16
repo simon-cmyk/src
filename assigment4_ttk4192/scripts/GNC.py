@@ -228,10 +228,13 @@ class turtle_turn():
 
         # Adjust orientation first
         while not rospy.is_shutdown():
+            theta_error = self.theta_sp - self.theta
             angular = self.pid_theta.update(self.theta)     # return calculated PID input
             if abs(angular) > 0.2:                          # turtlebot has not adjusted angle yet
                 angular = angular/abs(angular)*0.2          # fixed input "magnitude" when angle error is large
-            if abs(angular) < 0.01:                         # angle is within tolerance
+            if abs(angular) < 0.05:                         # make sure speed is above MIN s.t. turning is not stalling
+                angular = angular/abs(angular)*0.05 
+            if abs(theta_error) < 0.01:                         # angle is within tolerance
                 break
             self.vel.linear.x = 0               
             self.vel.angular.z = angular

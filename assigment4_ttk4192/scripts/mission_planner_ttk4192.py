@@ -131,7 +131,7 @@ def taking_photo_exe():
     # shutil.move(file_source + g, file_destination)
     rospy.sleep(1)
 
-def Manipulate_OpenManipulator_x(joints_pos, execution_time_secs=1):
+def manipulate_action(joints_pos, execution_time_secs=1):
 
     waypoint = task.split(' ')[4]
     theta = WPN_ORIENTATION[waypoint]
@@ -165,7 +165,7 @@ def move_gripper(joints_pos, execution_time_secs=1):
 
 
 
-def move_robot(task):
+def move_robot_action(task):
     """
     Inputs
         task:   move task including initial and gial waypoint
@@ -185,6 +185,7 @@ def move_robot(task):
         heu = 1
         my_path1 = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True)
     except:       # A* planner
+        pass    # TODO: NOT WORKING YET
         print('Computing path using A*')
         start_node = [int(289-100*startpos[1]), int(100*startpos[0])]
         goal_node = [int(289-100*goalpos[1]), int(100*goalpos[0])]
@@ -197,7 +198,7 @@ def move_robot(task):
     PosControl(my_path1)
 
 
-def take_picture(task):
+def take_picture_action(task):
     """
     """
     # Initialize
@@ -224,8 +225,8 @@ def odom_callback(msg):
     robot_pos_y = msg.pose.pose.position.y
 
 
-
-global robot_pos_x
+# global Robot pose updated in subscriber and accessible everywhere
+global robot_pos_x          
 global robot_pos_y
 global robot_pos_theta
 
@@ -238,15 +239,13 @@ map_scale = 0.01
 # Define list of global waypoints
 global WPNS
 WPNS = {'waypoint0': [0.40, 0.40, 0.0],
-       'waypoint1':  [1.85, 0.35, 0.0],
-       'waypoint2':  [3.00, 1.05, 0.0],
-       'waypoint3':  [2.90, 2.60, 0.0],
-    #    'waypoint3':  [3.15, 2.60, 0.0],
-       'waypoint4':  [4.70, 0.50, 0.0],
-       'waypoint5':  [1.15, 2.60, pi],
-    #    'waypoint5':  [0.95, 2.50, pi],
-       'waypoint6':  [3.60, 1.60, pi/2]}
-    #    'waypoint6':  [3.60, 1.70, pi/2]}
+       'waypoint1':  [1.85, 0.30, 0.0],
+       'waypoint2':  [3.00, 1.10, 0.0],
+       'waypoint3':  [3.75, 2.60, pi],
+       'waypoint4':  [4.55, 0.75, 0.0],
+       'waypoint5':  [1.35, 2.60, pi],
+       'waypoint6':  [3.60, 1.50, 0]
+        }
 
 global WPN_ORIENTATION
 WPN_ORIENTATION = {'waypoint0': 0.0,
@@ -284,7 +283,7 @@ if __name__ == '__main__':
         odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
         action_client = actionlib.SimpleActionClient('/arm_controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
 
-        graph = Graph('maps/map_ttk4192CA4_SG.png')
+        # graph = Graph('maps/map_ttk4192CA4_SG.png')
     
 
 	# 5.1) Starting the AI Planner
@@ -318,14 +317,14 @@ if __name__ == '__main__':
 
         for task in task_total:
             if 'move_robot' in task:
-                move_robot(task)
+                move_robot_action(task)
 
             elif 'check' in task:
-                take_picture(task)
+                take_picture_action(task)
                 rospy.sleep(3)
 
             elif 'manipulate' in task:
-                Manipulate_OpenManipulator_x(task)
+                manipulate_action(task)
 
         print("")
         print("--------------------------------------")

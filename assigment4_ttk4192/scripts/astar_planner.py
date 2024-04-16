@@ -15,8 +15,8 @@ REDDISH_PURPLE = (204, 121, 167, 255)
 
 class Graph:
     def __init__(self, image_file):
-        img = Image.open(image_file)
-        self.arr = np.array(img)
+        imgmap = Image.open(image_file)
+        self.arr = np.array(imgmap)
         self.start = None
         self.goal = None
         self.obstacle_map = np.zeros([self.arr.shape[0], self.arr.shape[1]])
@@ -30,7 +30,7 @@ class Graph:
         self.nodes = []
 
         self.fig = plt.figure()
-        self.img = plt.imshow(self.arr)
+        self.imgmap = plt.imshow(self.arr)
 
         for i in range(self.arr.shape[0]):
             for j in range(self.arr.shape[1]):
@@ -42,10 +42,10 @@ class Graph:
                 else:
                     self.nodes.append((i, j))
 
-        self.inflate_obstacles(self.img)
+        self.inflate_obstacles(self.imgmap)
 
 
-    def inflate_obstacles(self,img):
+    def inflate_obstacles(self,imgmap):
         safe_dist = 20    # inflation distance TODO: change to be parameter
         x_max = self.arr.shape[0]-1
         y_max = self.arr.shape[1]-1
@@ -97,7 +97,7 @@ class Graph:
         # self.visualize_map()
 
     def visualize_map(self):
-        self.img.set_data(self.arr)
+        self.imgmap.set_data(self.arr)
         plt.pause(0.0001)
 
     def add_shortest_path(self, path):
