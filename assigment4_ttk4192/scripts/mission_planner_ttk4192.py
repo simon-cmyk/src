@@ -307,8 +307,7 @@ if __name__ == '__main__':
         # i_ini=0
 
 
-        task_total = ["0.000: ( move_robot turtlebot0 waypoint0 waypoint2 d42 ) [10.0565]",
-                      "10.056: ( check_valve turtlebot0 waypoint2 camera0 valve1 ) [10.0000]",
+        task_total = ["10.056: ( check_valve turtlebot0 waypoint2 camera0 valve1 ) [10.0000]",
                       "20.055: ( manipulate_valve turtlebot0 waypoint2 robo_arm0 valve1 ) [10.0000]",
                       "30.055: ( move_robot turtlebot0 waypoint2 waypoint6 d23 ) [9.2222]",
                       "39.280: ( move_robot turtlebot0 waypoint6 waypoint5 d35 ) [12.2222]",
