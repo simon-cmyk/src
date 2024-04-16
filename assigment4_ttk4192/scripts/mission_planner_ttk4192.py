@@ -36,6 +36,7 @@ from GNC import PosControl, PID, turtle_turn
 import actionlib
 import control_msgs.msg
 import trajectory_msgs.msg
+from astar_planner import Graph, a_star, heuristic_euclidean, mirror_coordinate, mirrior_plan
 
 """ ----------------------------------------------------------------------------------
 Mission planner for Autonomos robots: TTK4192,NTNU. 
@@ -132,27 +133,25 @@ def taking_photo_exe():
 
 def Manipulate_OpenManipulator_x(joints_pos, execution_time_secs=1):
 
-    waypoint = task.split('_')[1]
+    waypoint = task.split(' ')[4]
     theta = WPN_ORIENTATION[waypoint]
 
-    rospy.logwarn("Executing manipulate an object")
+    rospy.logwarn("Executing manipulate an object at waypoint %s" % (waypoint))
 
     turtle_turn(theta)              # adjust angle before manipulating
 
-    move_gripper(init_pose)
+    move_gripper(gripper_init_pose)
     rospy.sleep(2)
-    move_gripper(home_pose)
+    move_gripper(gripper_home_pose)
 
 
 
 def move_gripper(joints_pos, execution_time_secs=1):
-    rospy.logwarn("Executing move manipulator")
 
     goal_point = trajectory_msgs.msg.JointTrajectoryPoint(positions=joints_pos)
     goal_point.time_from_start.secs = execution_time_secs
 
     trajectory = trajectory_msgs.msg.JointTrajectory(joint_names=['joint1', 'joint2', 'joint3', 'joint4'], points=[goal_point])
-
 
     goal = control_msgs.msg.FollowJointTrajectoryGoal(trajectory=trajectory)
 
@@ -168,31 +167,44 @@ def move_gripper(joints_pos, execution_time_secs=1):
 
 def move_robot(task):
     """
-    Created by MNK as a general move_action between input positions given as string literals
+    Inputs
+        task:   move task including initial and gial waypoint
+
+    Function will compute a path between waypoints using a path planner.
+    Hybrid A* is default planner. Fall back planner A* is used in case primary planner fails
     """
-    startpos = task.split('_')[2]
+    startpos = task.split(' ')[4]
     startpos = WPNS[startpos][0:3]
-    goalpos = task.split('_')[3]
+    goalpos = task.split(' ')[5]
     goalpos = WPNS[goalpos][0:3]
-    print("Excuting move from (%2f,%2f) to (%2f,%2f)" % (startpos[0], startpos[1], goalpos[0], goalpos[1]))
+    rospy.logwarn("Excuting move from (%2f,%2f) to (%2f,%2f)" % (startpos[0], startpos[1], goalpos[0], goalpos[1]))
 
     # Get path from path planner
-    print('Computing path using A*')
-    # TODO: Add path planner
-    heu = 1
-    my_path1 = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True)
-    path = [startpos[0:2],goalpos[0:2]]
+    try:   # Hybrid A* planner             # TODO: Add condition to use Hybrid A* as primary planner
+        print('Computing path using Hybrid A*')
+        heu = 1
+        my_path1 = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True)
+    except:       # A* planner
+        print('Computing path using A*')
+        start_node = [int(289-100*startpos[1]), int(100*startpos[0])]
+        goal_node = [int(289-100*goalpos[1]), int(100*goalpos[0])]
+        path, visited = a_star(graph,start_node,goal_node, heuristic_function=heuristic_euclidean)   
+
+        my_path1 = mirrior_plan(path, map_height, map_scale)
 
     # Move robot using motion controller
     print("Executing path following")
-    # turtlebot_move(my_path1)
     PosControl(my_path1)
 
 
 def take_picture(task):
+    """
+    """
     # Initialize
-    waypoint = task.split('_')[2]
+    waypoint = task.split(' ')[4]
     theta = WPN_ORIENTATION[waypoint]
+
+    rospy.logwarn("Executing take picture at waypoint %s" % (waypoint))
 
     turtle_turn(theta)              # adjust angle before taking photo
     taking_photo_exe()              # take picture
@@ -217,16 +229,24 @@ global robot_pos_x
 global robot_pos_y
 global robot_pos_theta
 
+gripper_home_pose = [-0.0, -1.0, 0.3, 0.7]
+gripper_init_pose = [0.0, 0.0, 0.0, 0.0]
+
+map_height = 2.89
+map_scale = 0.01 
 
 # Define list of global waypoints
 global WPNS
 WPNS = {'waypoint0': [0.40, 0.40, 0.0],
        'waypoint1':  [1.85, 0.35, 0.0],
        'waypoint2':  [3.00, 1.05, 0.0],
-       'waypoint3':  [3.15, 2.60, 0.0],
+       'waypoint3':  [2.90, 2.60, 0.0],
+    #    'waypoint3':  [3.15, 2.60, 0.0],
        'waypoint4':  [4.70, 0.50, 0.0],
-       'waypoint5':  [0.95, 2.50, pi],
-       'waypoint6':  [3.60, 1.70, pi/2]}
+       'waypoint5':  [1.15, 2.60, pi],
+    #    'waypoint5':  [0.95, 2.50, pi],
+       'waypoint6':  [3.60, 1.60, pi/2]}
+    #    'waypoint6':  [3.60, 1.70, pi/2]}
 
 global WPN_ORIENTATION
 WPN_ORIENTATION = {'waypoint0': 0.0,
@@ -237,8 +257,7 @@ WPN_ORIENTATION = {'waypoint0': 0.0,
                    'waypoint5': pi,
                    'waypoint6': pi/2}
 
-home_pose = [-0.0, -1.0, 0.3, 0.7]
-init_pose = [0.0, 0.0, 0.0, 0.0]
+
 
 
 
@@ -265,7 +284,7 @@ if __name__ == '__main__':
         odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
         action_client = actionlib.SimpleActionClient('/arm_controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
 
-
+        graph = Graph('maps/map_ttk4192CA4_SG.png')
     
 
 	# 5.1) Starting the AI Planner
@@ -289,25 +308,24 @@ if __name__ == '__main__':
         # i_ini=0
 
 
-
-        task_total = ["move_robot_waypoint0_waypoint2",
-                      "take_picture_waypoint2",
-                      "manipulate_waypoint2",
-                      "move_robot_waypoint2_waypoint0"]
+        task_total = ["0.000: ( move_robot turtlebot0 waypoint0 waypoint2 d42 ) [10.0565]",
+                      "10.056: ( check_valve turtlebot0 waypoint2 camera0 valve1 ) [10.0000]",
+                      "20.055: ( manipulate_valve turtlebot0 waypoint2 robo_arm0 valve1 ) [10.0000]",
+                      "30.055: ( move_robot turtlebot0 waypoint2 waypoint6 d23 ) [9.2222]",
+                      "39.280: ( move_robot turtlebot0 waypoint6 waypoint5 d35 ) [12.2222]",
+                      "51.502: ( check_pump turtlebot0 waypoint5 camera0 pump0 ) [10.0000]",
+                      "61.502: ( move_robot turtlebot0 waypoint5 waypoint3 d53 ) [12.2222]]"]
 
         for task in task_total:
             if 'move_robot' in task:
                 move_robot(task)
 
-            elif 'take_picture' in task:
+            elif 'check' in task:
                 take_picture(task)
                 rospy.sleep(3)
 
             elif 'manipulate' in task:
                 Manipulate_OpenManipulator_x(task)
-
-
-
 
         print("")
         print("--------------------------------------")
