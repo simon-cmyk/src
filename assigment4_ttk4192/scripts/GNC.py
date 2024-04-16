@@ -96,12 +96,6 @@ class PosControl():
             if abs(errorTheta) > self.orientation_threshold and (target_distance > self.DISTANCE_THRESHOLD):  # angle error is to big
                 self.orientation_threshold = self.ORIENTATION_THRESHOLD_LOW
                 self.vel.angular.z = 2*self.kp*errorTheta*self.CONSTANT_ANGULAR_SPEED
-            #     # adjust orientation
-            #     if target_theta > self.theta:
-            #         self.vel.angular.z = self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
-            #     else:
-            #         self.vel.angular.z = -self.kp*abs(errorTheta)*self.CONSTANT_ANGULAR_SPEED
-            #     self.vel.linear.x = 0.0
                 
             # # move towards target position adjusting speed and orientation
             else:
@@ -112,7 +106,7 @@ class PosControl():
 
                 # adjust speed
                 if target_distance > self.DISTANCE_THRESHOLD:
-                    self.vel.linear.x = max(min(0.7*self.vel.linear.x+self.CONSTANT_LINEAR_SPEED*self.kp*target_distance, self.MAX_LINEAR_SPEED), self.MIN_LINEAR_SPEED)
+                    self.vel.linear.x = max(min(self.CONSTANT_LINEAR_SPEED*self.kp*target_distance, self.MAX_LINEAR_SPEED), self.MIN_LINEAR_SPEED)
                     self.vel.linear.x *= self.dir
                 else:
                     self.vel.linear.x = 0.0

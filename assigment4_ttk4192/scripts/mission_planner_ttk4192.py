@@ -32,11 +32,11 @@ from utils.car import SimpleCar
 from utils.grid import Grid_robplan
 # Import here the packages used in your codes
 from hybrid_a_star import HybridAstar, main_hybrid_a
-from GNC import PosControl, PID, turtle_turn
+from GNC import PosControl, turtle_turn
 import actionlib
 import control_msgs.msg
 import trajectory_msgs.msg
-from astar_planner import Graph, a_star, heuristic_euclidean, mirror_coordinate, mirrior_plan
+from astar_planner import Graph, a_star, heuristic_euclidean, mirrior_plan
 
 """ ----------------------------------------------------------------------------------
 Mission planner for Autonomos robots: TTK4192,NTNU. 
@@ -132,7 +132,7 @@ def manipulate_action(joints_pos, execution_time_secs=1):
 
     turtle_turn(theta)              # adjust angle before manipulating
 
-    move_gripper(gripper_init_pose)
+    move_gripper(gripper_manipulate_pose)
     rospy.sleep(2)
     move_gripper(gripper_home_pose)
 
@@ -223,7 +223,7 @@ global robot_pos_y
 global robot_pos_theta
 
 gripper_home_pose = [-0.0, -1.0, 0.3, 0.7]
-gripper_init_pose = [0.0, 0.0, 0.0, 0.0]
+gripper_manipulate_pose = [0.0, 0.0, 0.0, 0.0]
 
 map_height = 2.89
 map_scale = 0.01 
@@ -241,12 +241,12 @@ WPNS = {'waypoint0': [0.40, 0.40, 0.0],
 
 global WPN_ORIENTATION
 WPN_ORIENTATION = {'waypoint0': 0.0,
-                   'waypoint1': pi/2,
-                   'waypoint2': -pi/2,
+                   'waypoint1': pi/4,
+                   'waypoint2': -3*pi/4,
                    'waypoint3': 0.0,
                    'waypoint4': 0.0,
                    'waypoint5': pi,
-                   'waypoint6': pi/2}
+                   'waypoint6': 3*pi/2}
 
 
 
