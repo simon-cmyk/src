@@ -107,28 +107,20 @@ class TakePhoto:
         else:
             return False
         
-def taking_photo_exe():
+def taking_photo(location):
     # Initialize
     camera = TakePhoto()
 
     # Default value is 'photo.jpg'
     now = datetime.now()
     dt_string = now.strftime("%d%m%Y_%H%M%S")
-    img_title = rospy.get_param('~image_title', 'photo'+dt_string+'.jpg')
+    img_title = rospy.get_param('~image_title', str(location)+'-'+dt_string+'.jpg')
 
     if camera.take_picture(img_title):
         rospy.loginfo("Saved image " + img_title)
     else:
         rospy.loginfo("No images received")
-	#eog photo.jpg
-    # Sleep to give the last log messages time to be sent
 
-	# saving photo in a desired directory
-    # file_source = '/home/miguel/catkin_ws/'
-    # file_destination = '/home/miguel/catkin_ws/src/assigment4_ttk4192/scripts'
-    # g='photo'+dt_string+'.jpg'
-
-    # shutil.move(file_source + g, file_destination)
     rospy.sleep(1)
 
 def manipulate_action(joints_pos, execution_time_secs=1):
@@ -144,7 +136,7 @@ def manipulate_action(joints_pos, execution_time_secs=1):
     rospy.sleep(2)
     move_gripper(gripper_home_pose)
 
-
+    rospy.logwarn("Action done.")
 
 def move_gripper(joints_pos, execution_time_secs=1):
 
@@ -163,8 +155,6 @@ def move_gripper(joints_pos, execution_time_secs=1):
 
     return action_client.get_result()
 
-
-
 def move_robot_action(task):
     """
     Inputs
@@ -180,22 +170,24 @@ def move_robot_action(task):
     rospy.logwarn("Excuting move from (%2f,%2f) to (%2f,%2f)" % (startpos[0], startpos[1], goalpos[0], goalpos[1]))
 
     # Get path from path planner
-    try:   # Hybrid A* planner             # TODO: Add condition to use Hybrid A* as primary planner
-        print('Computing path using Hybrid A*')
+    try:    # Hybrid A* planner
+        rospy.loginfo('Computing path using Hybrid A*')
         heu = 1
-        my_path1 = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True)
-    except:       # A* planner
-        pass    # TODO: NOT WORKING YET
-        print('Computing path using A*')
+        path = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True)
+    except: # A* planner
+        rospy.logwarn('Hybrid A* failed computing a path')
+        rospy.loginfo('Computing path using A*')
         start_node = [int(289-100*startpos[1]), int(100*startpos[0])]
         goal_node = [int(289-100*goalpos[1]), int(100*goalpos[0])]
         path, visited = a_star(graph,start_node,goal_node, heuristic_function=heuristic_euclidean)   
 
-        my_path1 = mirrior_plan(path, map_height, map_scale)
+        path = mirrior_plan(path, map_height, map_scale)
 
     # Move robot using motion controller
-    print("Executing path following")
-    PosControl(my_path1)
+    rospy.loginfo("Executing path following")
+    PosControl(path)
+    
+    rospy.logwarn("Action done.")
 
 
 def take_picture_action(task):
@@ -208,7 +200,7 @@ def take_picture_action(task):
     rospy.logwarn("Executing take picture at waypoint %s" % (waypoint))
 
     turtle_turn(theta)              # adjust angle before taking photo
-    taking_photo_exe()              # take picture
+    taking_photo(waypoint)          # take picture
 
 
 
@@ -283,7 +275,10 @@ if __name__ == '__main__':
         odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
         action_client = actionlib.SimpleActionClient('/arm_controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
 
-        # graph = Graph('maps/map_ttk4192CA4_SG.png')
+        rospy.sleep(1)
+        move_gripper(gripper_home_pose)
+
+        graph = Graph('maps/map_ttk4192CA4.png')
     
 
 	# 5.1) Starting the AI Planner

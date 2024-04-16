@@ -29,8 +29,8 @@ class Graph:
         self.map_changed = True
         self.nodes = []
 
-        self.fig = plt.figure()
-        self.imgmap = plt.imshow(self.arr)
+        # self.fig = plt.figure()               # MNK 160424 Conflict with Hybrid A* plotting
+        # self.imgmap = plt.imshow(self.arr)    # MNK 160424 Conflict with Hybrid A* plotting
 
         for i in range(self.arr.shape[0]):
             for j in range(self.arr.shape[1]):
@@ -42,10 +42,10 @@ class Graph:
                 else:
                     self.nodes.append((i, j))
 
-        self.inflate_obstacles(self.imgmap)
+        self.inflate_obstacles()
 
 
-    def inflate_obstacles(self,imgmap):
+    def inflate_obstacles(self):
         safe_dist = 20    # inflation distance TODO: change to be parameter
         x_max = self.arr.shape[0]-1
         y_max = self.arr.shape[1]-1
@@ -57,13 +57,6 @@ class Graph:
                     y1 = max(0,j-safe_dist)
                     y2 = min(y_max,j+safe_dist)
                     self.obstacle_map_inflated[x1:x2+1,y1:y2+1] = np.ones([x2-x1+1, y2-y1+1])
-
-        # Put obstacle clearance at the map border
-        self.obstacle_map_inflated[0:x_max+1,0:safe_dist] = np.ones([x_max+1, safe_dist])
-        self.obstacle_map_inflated[0:x_max+1,y_max-safe_dist+1:y_max+1] = np.ones([x_max+1, safe_dist])
-        self.obstacle_map_inflated[0:safe_dist,0:y_max+1] = np.ones([safe_dist,y_max+1])
-        self.obstacle_map_inflated[x_max-safe_dist+1:x_max+1,0:y_max+1] = np.ones([safe_dist,y_max+1])
-        pass
 
 
 
@@ -81,7 +74,7 @@ class Graph:
                 potential_neighbor = [node[0] + x, node[1] + y]
                 if potential_neighbor[0] < 0 or potential_neighbor[1] < 0:
                     continue
-                # if self.obstacle_map[potential_neighbor[0]][potential_neighbor[1]] == 0:
+
                 if self.obstacle_map_inflated[potential_neighbor[0]][potential_neighbor[1]] == 0:
                     neighbors.append(tuple(potential_neighbor))
 
@@ -105,7 +98,9 @@ class Graph:
         for node in path:
             if node != tuple(self.start) and node != tuple(self.goal):
                 self.arr[node[0]][node[1]] = path_color
-        self.visualize_map()
+
+        plt.figure()
+        plt.imshow(self.arr)
         plt.show()
 
     def get_start_node(self):
@@ -162,7 +157,6 @@ def a_star(graph, start_node, goal_node, heuristic_function=None):
                 priority = new_cost + heuristic_function(graph, neighbor)
                 heapq.heappush(Frontier,(priority,neighbor))
 
-    graph.visualize_map()
 
     # Find shortest path
     path = []
@@ -179,6 +173,8 @@ def a_star(graph, start_node, goal_node, heuristic_function=None):
 
     graph.add_shortest_path(path)
 
+    path = path[:-1:7] + [path[-1]] # Only keep every 7 point in path
+
     return path, visited
 
 def mirror_coordinate(point, h, scale):
@@ -191,6 +187,7 @@ def mirrior_plan(path, height, scale):
     for point in path:
         reverse_path.insert(0, mirror_coordinate(point,height,scale))
 
+    reverse_path = np.array(reverse_path)
     return reverse_path
 
 def heuristic_euclidean(graph, node):
@@ -206,7 +203,7 @@ def heuristic_diagonal(graph, node):
     return min(abs(goal[0] - node[0]), abs(goal[1] - node[1]))
 
 if __name__ == "__main__":
-    graph = Graph('maps/map_ttk4192CA4_SG.png')
+    graph = Graph('maps/map_ttk4192CA4.png')
     start_node = [250,40]
     goal_node = [30,370]
     path, visited = a_star(graph,start_node,goal_node, heuristic_function=heuristic_euclidean)

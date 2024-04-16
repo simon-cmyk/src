@@ -50,12 +50,12 @@ class PosControl():
         st = time.perf_counter()                                               # global list of wpns (xi,yi)
         for point in self.path:
             self.move_to_point(point)
-            # rospy.sleep(1)    # MNK 7.4.23 COMMENTED OUT
+
         et = time.perf_counter()
         self.stop()
-        rospy.logwarn("Action done.")
 
         # plot trajectory
+
         data = np.array(self.trajectory)                                       # visualize driven trajectory
         np.savetxt('trajectory.csv', data, fmt='%f', delimiter=',')
         plt.figure()
@@ -68,6 +68,7 @@ class PosControl():
         plt.tight_layout()
         plt.savefig('trajectory.png')
         plt.show()
+
 
     def move_to_point(self, target_pos):
 
@@ -218,13 +219,12 @@ class turtle_turn():
         rospy.logwarn("Turning done.")
 
     def turn_robot(self):
-        print("Executing Make a turn")
+        rospy.logwarn("Executing Make a turn: " + str(self.theta_sp) + "rad")
         time.sleep(1)
 
         # TODO: Turn robot
         self.pid_theta.setPID(1, 0, 0)     # P control while steering
         self.pid_theta.setPoint(self.theta_sp)
-        rospy.logwarn("### PID: set target theta = " + str(self.theta_sp) + " ###")
 
         # Adjust orientation first
         while not rospy.is_shutdown():
