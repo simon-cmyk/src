@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rospy
+import rospkg
 import os
 import tf
 import numpy as np
@@ -25,6 +26,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import shutil
+import subprocess
 import copy
 import time
 from utils.environment import Environment_robplan
@@ -307,12 +309,20 @@ if __name__ == '__main__':
         # i_ini=0
 
 
-        task_total = ["10.056: ( check_valve turtlebot0 waypoint2 camera0 valve1 ) [10.0000]",
-                      "20.055: ( manipulate_valve turtlebot0 waypoint2 robo_arm0 valve1 ) [10.0000]",
-                      "30.055: ( move_robot turtlebot0 waypoint2 waypoint6 d23 ) [9.2222]",
-                      "39.280: ( move_robot turtlebot0 waypoint6 waypoint5 d35 ) [12.2222]",
-                      "51.502: ( check_pump turtlebot0 waypoint5 camera0 pump0 ) [10.0000]",
-                      "61.502: ( move_robot turtlebot0 waypoint5 waypoint3 d53 ) [12.2222]]"]
+
+        script_path = '/home/ntnu-itk/catkin_ws/src/AI-planning/run-planner/run_planner.sh'
+        subprocess.run(['bash', script_path])
+
+
+        with open('/home/ntnu-itk/catkin_ws/src/tmp_sas_plan.1', 'r') as file:
+            task_total = [task.strip() for task in file]
+
+    
+        print('TASK TOTAL')
+        print(task_total)
+        
+
+
 
         for task in task_total:
             if 'move_robot' in task:
