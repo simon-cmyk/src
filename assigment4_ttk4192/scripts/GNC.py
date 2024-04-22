@@ -28,7 +28,7 @@ class PosControl():
         self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
         self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
         self.vel = Twist()                                                     # vector3 linear, vector3 angular
-        self.rate = rospy.Rate(25)                                             # update frequency of velocity commands
+        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
         self.trajectory = list()                                               # store history (trajectory driven by turtlebot3)
         rospy.sleep(1)
 
@@ -53,8 +53,17 @@ class PosControl():
 
         et = time.perf_counter()
         self.stop()
+        
+        time_diff = et - st
 
-        # plot trajectory
+        # Convert time difference to minutes and seconds
+        minutes = int(time_diff // 60)
+        seconds = int(time_diff % 60)
+
+        # Format the time difference string
+        time_str = f"{minutes} min and {seconds} sec."
+
+        
 
         data = np.array(self.trajectory)                                       # visualize driven trajectory
         np.savetxt('trajectory.csv', data, fmt='%f', delimiter=',')
@@ -64,7 +73,7 @@ class PosControl():
         plt.plot(data[-1, 0], data[-1, 1], 'b', marker='o',label="end")
         plt.plot(self.path[:, 0], self.path[:, 1], 'g', label="planned path")
         plt.legend()
-        plt.title(f"Action took {et - st} seconds")
+        plt.title(f"Action took {time_str}")
         plt.tight_layout()
         plt.savefig('trajectory.png')
         plt.show()
@@ -205,7 +214,7 @@ class turtle_turn():
         self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
         self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
         self.vel = Twist()                                                     # vector3 linear, vector3 angular
-        self.rate = rospy.Rate(25)                                             # update frequency of velocity commands
+        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
 
 
         self.turn_robot()
@@ -227,8 +236,8 @@ class turtle_turn():
             if abs(angular) > 0.2:                          # turtlebot has not adjusted angle yet
                 angular = angular/abs(angular)*0.2          # fixed input "magnitude" when angle error is large
             if abs(angular) < 0.05:                         # make sure speed is above MIN s.t. turning is not stalling
-                angular = angular/abs(angular)*0.05 
-            if abs(theta_error) < 0.01:                         # angle is within tolerance
+                angular = angular/abs(angular)*0.07 
+            if abs(theta_error) < 0.02:                         # angle is within tolerance
                 break
             self.vel.linear.x = 0               
             self.vel.angular.z = angular

@@ -220,7 +220,7 @@ class turtle_turn():
         self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_callback) # subscribing to the odometer (return pos and vel of turtlebot)
         self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)        # sending vehicle speed commands to turtlebot3
         self.vel = Twist()                                                     # vector3 linear, vector3 angular
-        self.rate = rospy.Rate(25)                                             # update frequency of velocity commands
+        self.rate = rospy.Rate(10)                                             # update frequency of velocity commands
 
 
         self.turn_robot()

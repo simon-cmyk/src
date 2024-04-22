@@ -1,39 +1,16 @@
 #!/usr/bin/env python3
 import rospy
-import rospkg
-import os
 import tf
-import numpy as np
-import matplotlib.pyplot as plt
-from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from math import pi, sqrt, atan2, tan, sin, cos
-from os import system, name
-import re
-import fileinput
-import sys
-import argparse
-import random
+from math import pi
 import matplotlib.animation as animation
 from datetime import datetime
-from matplotlib.collections import PatchCollection, LineCollection
-from matplotlib.patches import Rectangle
-from itertools import product
-from utils.astar import Astar
-from utils.utils import plot_a_car, get_discretized_thetas, round_theta, same_point
 import cv2
-from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-import shutil
 import subprocess
-import copy
 import time
-from utils.environment import Environment_robplan
-from utils.car import SimpleCar
-from utils.grid import Grid_robplan
-# Import here the packages used in your codes
-from hybrid_a_star import HybridAstar, main_hybrid_a
+from hybrid_a_star import main_hybrid_a
 from GNC import PosControl, turtle_turn
 import actionlib
 import control_msgs.msg
@@ -41,41 +18,12 @@ import trajectory_msgs.msg
 from astar_planner import Graph, a_star, heuristic_euclidean, mirrior_plan
 
 """ ----------------------------------------------------------------------------------
-Mission planner for Autonomos robots: TTK4192,NTNU. 
-Date:20.03.23
+Mission planner for Autonomos robots: TTK4192, NTNU. 
+Date: 26.04.24
 characteristics: AI planning,GNC, hybrid A*, ROS.
 robot: Turtlebot3
 version: 1.1
 """ 
-
-
-# 1) Program here your AI planner (only one) ------------------------------------------------------------
-"""
-1) Temporal planner : Program a routine wich call the installed STP planner; 
-2) Graph plan       : Use the graph-plan code provided in the lecture
-3) other algorithm 
-"""
-
-
-# 2) Program here your path-finding algorithm (only one) --------------------------------------------------------------------
-""" 
-1) Hybrid A-star pathfinding : Use the algorithm provided in Assignment 1
-2) A-star                    : Program your code
-3) Other method
-"""
-
-
-        
-#3) GNC module (path-followig and PID controller for the robot) ------------------------------
-"""  Robot Guidance navigation and control module 
-"""
-
-
-
-#4) Program here the turtlebot actions (based in your PDDL domain)
-"""
-Turtlebot 3 actions-------------------------------------------------------------------------
-"""
 
 class TakePhoto:
     def __init__(self):
@@ -137,8 +85,10 @@ def manipulate_action(joints_pos, execution_time_secs=1):
     move_gripper(gripper_manipulate_pose)
     rospy.sleep(2)
     move_gripper(gripper_home_pose)
+    
+    turtle_turn(WPNS[waypoint][2])     
 
-    rospy.logwarn("Action done.")
+    rospy.logwarn("Action manipulate done.")
 
 def move_gripper(joints_pos, execution_time_secs=1):
 
@@ -186,10 +136,11 @@ def move_robot_action(task):
         path = mirrior_plan(path, map_height, map_scale)
 
     # Move robot using motion controller
-    rospy.loginfo("Executing path following")
+    rospy.loginfo("Executing path following \n")
     PosControl(path)
     
-    rospy.logwarn("Action done.")
+    rospy.logwarn("Action move done. \n")
+    # turtle_turn(goalpos[2])  
 
 
 def take_picture_action(task):
@@ -203,6 +154,7 @@ def take_picture_action(task):
 
     turtle_turn(theta)              # adjust angle before taking photo
     taking_photo(waypoint)          # take picture
+    turtle_turn(WPNS[waypoint][2])  
 
 
 
@@ -248,7 +200,7 @@ WPN_ORIENTATION = {'waypoint0': 0.0,
                    'waypoint3': 0.0,
                    'waypoint4': 0.0,
                    'waypoint5': pi,
-                   'waypoint6': 3*pi/2}
+                   'waypoint6': pi/2}
 
 
 
@@ -262,16 +214,16 @@ if __name__ == '__main__':
         print()
         print("************ TTK4192 - Assigment 4 **************************")
         print()
-        print("AI planners: STP/GraphPlan/Other")
-        print("Path-finding: Hybrid A-star/A*/other")
+        print("AI planner: STP")
+        print("Path-finding: Hybrid A-star/A*")
         print("GNC Controller: PID path-following")
         print("Robot: Turtlebot3 waffle-pi")
-        print("date: 19.03.24")
+        print("date: 26.04.24")
         print()
         print("**************************************************************")
         print()
         print("Press Intro to start ...")
-        # input_t=input("")
+        _ =input("")
 
         rospy.init_node('turtlebot_move', anonymous=False)
         odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
@@ -282,43 +234,17 @@ if __name__ == '__main__':
 
         graph = Graph('maps/map_ttk4192CA4.png')
     
-
-	# 5.1) Starting the AI Planner
-       #Here you must run your AI planner module
-
-        # 5.2) Reading the plan 
-        # print("  ")
-        # print("Reading the plan from AI planner")
-        # print("  ")
-        # plan_general=plan_general
-        # print(plan_general[0])
-
-        # 5.3) Start mission execution 
-        # convert string into functions and executing
-        # print("")
-        # print("Starting mission execution")
-        # Start simulations with battery = 100%
-        # battery=100
-        # task_finished=0
-        # task_total=len(plan_general)
-        # i_ini=0
-
-
-
         script_path = '/home/ntnu-itk/catkin_ws/src/AI-planning/run-planner/run_planner.sh'
         subprocess.run(['bash', script_path])
 
 
-        with open('/home/ntnu-itk/catkin_ws/src/tmp_sas_plan.1', 'r') as file:
+        with open('plan/tmp_sas_plan.1', 'r') as file:
             task_total = [task.strip() for task in file]
 
     
-        print('TASK TOTAL')
-        print(task_total)
+        rospy.loginfo('Done with calculating plan \n')
+        # print(task_total)
         
-
-
-
         for task in task_total:
             if 'move_robot' in task:
                 move_robot_action(task)

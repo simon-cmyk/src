@@ -46,10 +46,10 @@ class HybridAstar:
         self.astar = Astar(self.grid, self.goal[:2])
 
         # All are weights for choosing heuristic. (default in the comments) 
-        self.w1 = 1.50 # 0.95 astar heuristic
+        self.w1 = 1.70 # 0.95 astar heuristic
         self.w2 = 0.05 # 0.05 simple heuristic
-        self.w3 = 0.40 # 0.30 extra cost of steering angle change
-        self.w4 = 0.20 # 0.10 extra cost of turning
+        self.w3 = 0.30 # 0.30 extra cost of steering angle change
+        self.w4 = 0.15 # 0.10 extra cost of turning
         self.w5 = 1.00 # 2.00 extra cost of reversing
 
         self.thetas = get_discretized_thetas(self.unit_theta)
@@ -235,7 +235,7 @@ class HybridAstar:
 def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize, simulation=True):
     l = 0.281
     w = 0.306
-    max_phi = pi/5
+    max_phi = pi/4
     start_pos, end_pos
     tc = map_grid_robplan(simulation)
   
@@ -243,8 +243,8 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize, simulation=
     car = RoboCar(env, start_pos, end_pos, l, max_phi, w)
     grid = Grid_robplan(env, cell_size=0.1)
 
-    if visualize == True:
-        plotstart(env, car)
+    # if visualize == True:
+    #     plotstart(env, car)
 
     hastar = HybridAstar(car, grid, reverse, unit_theta=pi/12, dt=1e-2, check_dubins=True)
 
@@ -255,7 +255,7 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize, simulation=
     if not path:
         raise Exception
     # a post-processing is required to have path list
-    path = path[:-1:7] + [path[-1]]
+    path = path[:-1:6] + [path[-1]]
 
     Wpts = np.array([list(p.pos) for p in path])
     carl = [p.model[0] for p in path]
@@ -266,23 +266,43 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize, simulation=
     return Wpts
 
 WAYPOINT = [
-                [0.30, 0.30, pi/2],
-                [1.85, 0.35, 0],
-                [3.00, 1.05, 0],
-                [3.75, 2.60, pi],
-                [4.65, 0.75, pi],
-                [1.05, 2.60, pi],
-                [3.60, 1.50, 0]
+                [0.40, 0.40, 0.0],
+        [1.85, 0.30, 0.0],
+       [3.00, 1.10, 0.0],
+        [3.75, 2.60, pi],
+        [4.55, 0.75, 0.0],
+       [1.35, 2.60, pi],
+       [3.60, 1.50, 0]
             ]
 
 if __name__ == '__main__':
     print("Executing hybrid A* algorithm")
 
-    # heu         = 1 
-    # start_pos   = WAYPOINT[0]       # Here defined initial position [x,y,angle]
-    # end_pos     = WAYPOINT[1]       # Target point                  [x,y, angle]
+    heu         = 1 
+    start_pos   = WAYPOINT[2]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINT[1]       # Target point                  [x,y, angle]
 
-    # my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+
+    start_pos   = WAYPOINT[1]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINT[5]       # Target point                  [x,y, angle]
+
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    
+    start_pos   = WAYPOINT[5]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINT[4]       # Target point                  [x,y, angle]
+
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+
+    start_pos   = WAYPOINT[4]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINT[6]       # Target point                  [x,y, angle]
+
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    
+    start_pos   = WAYPOINT[6]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINT[4]       # Target point                  [x,y, angle]
+
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
 
     # start_pos   = WAYPOINT[1]      
     # end_pos     = WAYPOINT[2]
