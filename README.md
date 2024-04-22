@@ -42,7 +42,9 @@ du kan spørre om hvordan "the mission" som skal utføres blir definert med tank
 * GNC module handout
 * When can we start with the physical one?
 
-* ideas for reactive implementation? Replanning or? 
-* Lab pc. Can we test on our own? 
-* Reversing the car -> We only give the path -> Leads to funky behaviour.
-Svar: 
+
+In home directory 
+
+```bash
+virtualenv --python=python2.7 /home/ntnu-itk/catkin_ws/src/AI-planning
+```
