@@ -232,12 +232,12 @@ class HybridAstar:
                     open_.append(child)
         return None, None
 
-def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize):
+def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize, simulation=True):
     l = 0.281
     w = 0.306
     max_phi = pi/5
     start_pos, end_pos
-    tc = map_grid_robplan()
+    tc = map_grid_robplan(simulation)
   
     env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.03)
     car = RoboCar(env, start_pos, end_pos, l, max_phi, w)

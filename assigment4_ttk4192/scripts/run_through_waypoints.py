@@ -350,7 +350,6 @@ if __name__ == '__main__':
             PosControl(path2)
         except:
             print("No valid path, trying A*!")
-            Try A* star
 
         path3 = main_hybrid_a(1, WPNS['waypoint3'], WPNS['waypoint5'], True, True, True)
         PosControl(path3)
