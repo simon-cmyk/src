@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import rospy
 import tf
+import numpy as np
 from nav_msgs.msg import Odometry
 from math import pi
 import matplotlib.animation as animation
@@ -32,7 +33,8 @@ class TakePhoto:
         self.image_received = False
 
         # Connect image topic
-        img_topic = "/camera/rgb/image_raw"
+        # img_topic = "/camera/rgb/image_raw"
+        img_topic = '/camera/image'
         self.image_sub = rospy.Subscriber(img_topic, Image, self.callback)
 
         # Allow up to one second to connection
@@ -87,6 +89,17 @@ def manipulate_action(joints_pos, execution_time_secs=1):
     move_gripper(gripper_home_pose)
     
     turtle_turn(WPNS[waypoint][2])     
+
+    rospy.logwarn("Action manipulate done.")
+
+def manipulate_action_dummy(joints_pos, execution_time_secs=1):
+
+    waypoint = task.split(' ')[4]
+    theta = WPN_ORIENTATION[waypoint]
+
+    rospy.logwarn("Executing manipulate an object at waypoint %s" % (waypoint))
+
+    rospy.sleep(1)
 
     rospy.logwarn("Action manipulate done.")
 
@@ -157,9 +170,6 @@ def take_picture_action(task):
     turtle_turn(WPNS[waypoint][2])  
 
 
-
-
-
 def odom_callback(msg):
     # Get (x, y, theta) specification from odometry topic
     quarternion = [msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,\
@@ -227,14 +237,22 @@ if __name__ == '__main__':
 
         rospy.init_node('turtlebot_move', anonymous=False)
         odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
-        action_client = actionlib.SimpleActionClient('/arm_controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
+        # action_client = actionlib.SimpleActionClient('/arm_controller/follow_joint_trajectory', control_msgs.msg.FollowJointTrajectoryAction)
 
         rospy.sleep(1)
-        move_gripper(gripper_home_pose)
+        # move_gripper(gripper_home_pose)
 
         graph = Graph('maps/map_ttk4192CA4.png')
-    
-        script_path = '/home/ntnu-itk/catkin_ws/src/AI-planning/run-planner/run_planner.sh'
+
+        path = np.array([[0,0],[0.4,0.4]])
+        PosControl(path)
+        turtle_turn(0.0)
+
+        print("Move turtlebot to position 0.4, 0.4")
+        print("Press to continue ...")
+        _ =input("")
+        
+        script_path = '/home/ttk4192/catkin_ws/src/AI-planning/run_planner/run_planner.sh'
         subprocess.run(['bash', script_path])
 
 
@@ -243,7 +261,8 @@ if __name__ == '__main__':
 
     
         rospy.loginfo('Done with calculating plan \n')
-        # print(task_total)
+        print("Done computing AI plan")
+        print(task_total)
         
         for task in task_total:
             if 'move_robot' in task:
@@ -254,7 +273,8 @@ if __name__ == '__main__':
                 rospy.sleep(3)
 
             elif 'manipulate' in task:
-                manipulate_action(task)
+                # manipulate_action(task)
+                manipulate_action_dummy(task)
 
         print("")
         print("--------------------------------------")

@@ -34,7 +34,7 @@ class PosControl():
 
         self.kp = 0.1
         self.CONSTANT_ANGULAR_SPEED = 5
-        self.CONSTANT_LINEAR_SPEED = 10
+        self.CONSTANT_LINEAR_SPEED = 2
         self.CONSTANT_REVERSE_SPEED = 2.5
 
         self.MAX_LINEAR_SPEED = 0.2

@@ -1,0 +1,110 @@
+Type-checking move_robot
+...action passes type checking.
+Type-checking check_valve
+...action passes type checking.
+Type-checking check_pump
+...action passes type checking.
+Type-checking manipulate_valve
+...action passes type checking.
+Checking plan: tmp_sas_plan.2
+Plan to validate:
+
+Plan size: 15
+0:
+(move_robot turtlebot0 waypoint0 waypoint2 d02) - start
+ 
+15.167:
+(check_valve turtlebot0 waypoint2 camera0 valve1) - start
+ 
+15.1676:
+Invariant for (check_valve turtlebot0 waypoint2 camera0 valve1)
+ 
+15.1676:
+(move_robot turtlebot0 waypoint0 waypoint2 d02) - end
+ 
+25.167:
+Invariant for (check_valve turtlebot0 waypoint2 camera0 valve1)
+ 
+25.167:
+(check_valve turtlebot0 waypoint2 camera0 valve1) - end
+ 
+25.169:
+(move_robot turtlebot0 waypoint2 waypoint6 d26) - start
+ 
+30.669:
+(move_robot turtlebot0 waypoint2 waypoint6 d26) - end
+(check_pump turtlebot0 waypoint6 camera0 pump1) - start
+ 
+40.669:
+Invariant for (check_pump turtlebot0 waypoint6 camera0 pump1)
+ 
+40.669:
+(check_pump turtlebot0 waypoint6 camera0 pump1) - end
+(move_robot turtlebot0 waypoint6 waypoint1 d61) - start
+ 
+52.835:
+(check_valve turtlebot0 waypoint1 camera0 valve0) - start
+ 
+52.8366:
+Invariant for (check_valve turtlebot0 waypoint1 camera0 valve0)
+ 
+52.8366:
+(move_robot turtlebot0 waypoint6 waypoint1 d61) - end
+ 
+62.835:
+Invariant for (check_valve turtlebot0 waypoint1 camera0 valve0)
+ 
+62.835:
+(check_valve turtlebot0 waypoint1 camera0 valve0) - end
+(manipulate_valve turtlebot0 waypoint1 robo_arm0 valve0) - start
+ 
+72.835:
+Invariant for (manipulate_valve turtlebot0 waypoint1 robo_arm0 valve0)
+ 
+72.835:
+(move_robot turtlebot0 waypoint1 waypoint5 d15) - start
+(manipulate_valve turtlebot0 waypoint1 robo_arm0 valve0) - end
+ 
+85.168:
+(check_pump turtlebot0 waypoint5 camera0 pump0) - start
+ 
+85.1683:
+Invariant for (check_pump turtlebot0 waypoint5 camera0 pump0)
+ 
+85.1683:
+(move_robot turtlebot0 waypoint1 waypoint5 d15) - end
+ 
+95.168:
+Invariant for (check_pump turtlebot0 waypoint5 camera0 pump0)
+ 
+95.168:
+(check_pump turtlebot0 waypoint5 camera0 pump0) - end
+(move_robot turtlebot0 waypoint5 waypoint4 d54) - start
+ 
+118.7791:
+(move_robot turtlebot0 waypoint5 waypoint4 d54) - end
+ 
+
+Plan Validation details
+-----------------------
+
+Checking next happening (time 0)
+Deleting (at turtlebot0 waypoint0)
+
+Checking next happening (time 15.167)
+Deleting (no_seals_check valve1)
+
+Checking next happening (time 15.1676)
+Plan failed because of unsatisfied precondition in:
+Invariant for (check_valve turtlebot0 waypoint2 camera0 valve1)
+
+Plan failed to execute
+
+Plan Repair Advice:
+
+Invariant for (check_valve turtlebot0 waypoint2 camera0 valve1) has its condition unsatisfied between time 15.167 to 15.1676, the condition is satisfied on the empty set. 
+(Set (at turtlebot0 waypoint2) to true)
+
+
+Failed plans:
+ tmp_sas_plan.2 

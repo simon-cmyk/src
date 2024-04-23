@@ -125,7 +125,7 @@ d60 d61 d62 d63 d64 d65 - route
 
 
 
-(at turtlebot0 waypoint2)
+(at turtlebot0 waypoint0)
 (at valve0 waypoint1)
 (at valve1 waypoint2)
 (at pump0 waypoint5)
