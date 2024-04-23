@@ -138,7 +138,7 @@ def move_robot_action(task):
     try:    # Hybrid A* planner
         rospy.loginfo('Computing path using Hybrid A*')
         heu = 1
-        path = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True)
+        path = main_hybrid_a(heu, startpos, goalpos, reverse=True, extra=True, visualize=True, simulation=False)
     except: # A* planner
         rospy.logwarn('Hybrid A* failed computing a path')
         rospy.loginfo('Computing path using A*')
