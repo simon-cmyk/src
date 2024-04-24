@@ -142,8 +142,10 @@ def move_robot_action(task):
     except: # A* planner
         rospy.logwarn('Hybrid A* failed computing a path')
         rospy.loginfo('Computing path using A*')
-        start_node = [int(289-100*startpos[1]), int(100*startpos[0])]
-        goal_node = [int(289-100*goalpos[1]), int(100*goalpos[0])]
+        # start_node = [int(289-100*startpos[1]), int(100*startpos[0])]     # Gazebo map size
+        # goal_node = [int(289-100*goalpos[1]), int(100*goalpos[0])]        # Gazebo map size
+        start_node = [int(276-100*startpos[1]), int(100*startpos[0])]       # D0042 map size
+        goal_node = [int(276-100*goalpos[1]), int(100*goalpos[0])]          # D0042 map size
         path, visited = a_star(graph,start_node,goal_node, heuristic_function=heuristic_euclidean)   
 
         path = mirrior_plan(path, map_height, map_scale)
@@ -189,7 +191,8 @@ global robot_pos_theta
 gripper_home_pose = [-0.0, -1.0, 0.3, 0.7]
 gripper_manipulate_pose = [0.0, 0.0, 0.0, 0.0]
 
-map_height = 2.89
+# map_height = 2.89     # Gazebo map size
+map_height = 2.76       # D0042 map size
 map_scale = 0.01 
 
 # Define list of global waypoints
@@ -242,7 +245,7 @@ if __name__ == '__main__':
         rospy.sleep(1)
         # move_gripper(gripper_home_pose)
 
-        graph = Graph('maps/map_ttk4192CA4.png')
+        graph = Graph('maps/map_ttk4192CA4_D0042.png')
 
         path = np.array([[0,0],[0.4,0.4]])
         PosControl(path)
