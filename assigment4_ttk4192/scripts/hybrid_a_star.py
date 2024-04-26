@@ -235,11 +235,11 @@ class HybridAstar:
 def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize, simulation=True):
     l = 0.281
     w = 0.306
-    max_phi = pi/4
+    max_phi = pi/5.0
     start_pos, end_pos
     tc = map_grid_robplan(simulation)
   
-    env = Environment_robplan(tc.obs, lx=5.0, ly=2.9, safe_distance=0.03)
+    env = Environment_robplan(tc.obs, lx=5.21, ly=2.77, safe_distance=0.03)
     car = RoboCar(env, start_pos, end_pos, l, max_phi, w)
     grid = Grid_robplan(env, cell_size=0.1)
 
@@ -267,42 +267,42 @@ def main_hybrid_a(heu,start_pos, end_pos, reverse, extra, visualize, simulation=
 
 WAYPOINT = [
                 [0.40, 0.40, 0.0],
-        [1.85, 0.30, 0.0],
-       [3.00, 1.10, 0.0],
+        [1.90, 0.30, 0.0],
+        [3.00, 1.10, 0.0],
         [3.75, 2.60, pi],
         [4.55, 0.75, 0.0],
-       [1.35, 2.60, pi],
-       [3.60, 1.50, 0]
+        [1.05, 2.35, pi],
+       [3.75, 1.30, 0]
             ]
 
 if __name__ == '__main__':
     print("Executing hybrid A* algorithm")
 
     heu         = 1 
+    start_pos   = WAYPOINT[0]       # Here defined initial position [x,y,angle]
+    end_pos     = WAYPOINT[2]       # Target point                  [x,y, angle]
+
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True, simulation=False)
+
     start_pos   = WAYPOINT[2]       # Here defined initial position [x,y,angle]
-    end_pos     = WAYPOINT[1]       # Target point                  [x,y, angle]
-
-    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
-
-    start_pos   = WAYPOINT[1]       # Here defined initial position [x,y,angle]
-    end_pos     = WAYPOINT[5]       # Target point                  [x,y, angle]
-
-    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
-    
-    start_pos   = WAYPOINT[5]       # Here defined initial position [x,y,angle]
     end_pos     = WAYPOINT[4]       # Target point                  [x,y, angle]
 
-    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
-
-    start_pos   = WAYPOINT[4]       # Here defined initial position [x,y,angle]
-    end_pos     = WAYPOINT[6]       # Target point                  [x,y, angle]
-
-    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True, simulation=False)
     
-    start_pos   = WAYPOINT[6]       # Here defined initial position [x,y,angle]
-    end_pos     = WAYPOINT[4]       # Target point                  [x,y, angle]
+    # start_pos   = WAYPOINT[5]       # Here defined initial position [x,y,angle]
+    # end_pos     = WAYPOINT[4]       # Target point                  [x,y, angle]
 
-    my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    # my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+
+    # start_pos   = WAYPOINT[4]       # Here defined initial position [x,y,angle]
+    # end_pos     = WAYPOINT[6]       # Target point                  [x,y, angle]
+
+    # my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
+    
+    # start_pos   = WAYPOINT[6]       # Here defined initial position [x,y,angle]
+    # end_pos     = WAYPOINT[4]       # Target point                  [x,y, angle]
+
+    # my_path1 = main_hybrid_a(heu, start_pos,end_pos, reverse=True, extra=True, visualize=True)
 
     # start_pos   = WAYPOINT[1]      
     # end_pos     = WAYPOINT[2]

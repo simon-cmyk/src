@@ -135,18 +135,19 @@ d60 d61 d62 d63 d64 d65 - route
 (available robo_arm0)
 (no_seals_check valve0)
 (no_seals_check valve1)
+(no_valve_manipulated valve0)
+(no_valve_manipulated valve1)
 (no_seals_check pump0)
 (no_seals_check pump1)
-(no_valve_manipulated valve0)
+
+
 
 )
 (:goal (and
-(at turtlebot0 waypoint4)
+(at turtlebot0 waypoint1)
 (valve_manipulated valve0)
-(seals_check pump0)
-(seals_check valve0)
 (seals_check valve1)
-(seals_check pump1)
+
 )
 )
 (:metric minimize (total-time))

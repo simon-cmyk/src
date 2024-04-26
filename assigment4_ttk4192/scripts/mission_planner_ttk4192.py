@@ -195,24 +195,34 @@ gripper_manipulate_pose = [0.0, 0.0, 0.0, 0.0]
 map_height = 2.76       # D0042 map size
 map_scale = 0.01 
 
+# global WPNS
+# WPNS = {'waypoint0': [0.40, 0.40, 0.0],
+#        'waypoint1':  [1.85, 0.30, 0.0],
+#        'waypoint2':  [3.00, 1.10, 0.0],
+#        'waypoint3':  [3.75, 2.60, pi],
+#        'waypoint4':  [4.55, 0.75, 0.0],
+#        'waypoint5':  [1.35, 2.60, pi],
+#        'waypoint6':  [3.60, 1.50, 0]
+#         }
+
 # Define list of global waypoints
 global WPNS
 WPNS = {'waypoint0': [0.40, 0.40, 0.0],
-       'waypoint1':  [1.85, 0.30, 0.0],
+       'waypoint1':  [1.90, 0.30, 0.0],
        'waypoint2':  [3.00, 1.10, 0.0],
-       'waypoint3':  [3.75, 2.60, pi],
+       'waypoint3':  [3.75, 2.50, pi],
        'waypoint4':  [4.55, 0.75, 0.0],
-       'waypoint5':  [1.35, 2.60, pi],
-       'waypoint6':  [3.60, 1.50, 0]
+       'waypoint5':  [1.05, 2.35, pi],
+       'waypoint6':  [3.75, 1.30, 0]
         }
 
 global WPN_ORIENTATION
 WPN_ORIENTATION = {'waypoint0': 0.0,
-                   'waypoint1': pi/4,
-                   'waypoint2': -3*pi/4,
+                   'waypoint1': pi/2,
+                   'waypoint2': -pi/2,
                    'waypoint3': 0.0,
                    'waypoint4': 0.0,
-                   'waypoint5': pi,
+                   'waypoint5': pi/2,
                    'waypoint6': pi/2}
 
 
@@ -246,6 +256,8 @@ if __name__ == '__main__':
         # move_gripper(gripper_home_pose)
 
         graph = Graph('maps/map_ttk4192CA4_D0042.png')
+
+        take_picture_action('0.000: ( move_robot turtlebot0 waypoint0 waypoint1 d01 ) [8.3898]')
 
         path = np.array([[0,0],[0.4,0.4]])
         PosControl(path)
