@@ -110,7 +110,7 @@ These should be clickable links to the videos 📹
 * Planner is using hard-coded euclidean distances. It is desired to dynamically update these distances during run-time.
 * Add pose feedback in the GNC and path planning module to compensate for the robot's odometry drift.
 
-### Credits :bow-tie:
+### Credits :bowtie:
 
 | Contributor      | Email     |
 | ---------------- | ---------------- |
