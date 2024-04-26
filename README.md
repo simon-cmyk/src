@@ -3,7 +3,7 @@ The repository is split into 2 branches. The master branch is created for simula
 
 
 ### Additional packages
-The STP-planner can be fetched from the following repository:
+The STP-planner is an external module not included in the git repository. It must be fetched from the following repository before executing the AI-planne:
 [temporal-planning](https://github.com/aig-upf/temporal-planning).
 
 #### How to laucnh the STP-planner
@@ -44,10 +44,6 @@ The STP-planner can be fetched from the following repository:
     ```
 
 
-
-
-
-
 ### How to launch Gazebo, TTK4192 assignment map and Turtlebot with manipulator
 ```bash
 export TURTLEBOT3_MODEL=waffle_pi
@@ -68,10 +64,10 @@ roslaunch turtlebot3_bringup turtlebot3_robot.launch
 ###
 
 ### Known issues
-* Hybrid A* is occasionally failing when computing a path. If so, then A* is implemented as a fallback path planner.
-* The bringup launch file will spawn the robot at position (0,0) at angle 0 which is not in agreement with the internal map of the planner. Added A procedure to manually calibrate the robot before the AI-planner is ran. 
+* Hybrid A* is occasionally failing when computing a path. If so, then A* is implemented as a fallback path planner is used.
+* The bringup launch file will spawn the robot at position (0,0) at angle 0 which is not in agreement with the internal map of the planner. We added A procedure to manually calibrate the robot before the AI-planner is ran. 
 
 ### Desired improvements
-* Add functionality to re-plan based on changes in the environment
-* Planner is using hard-coded euclidean distances in the AI-planner. It is desired to dynamically update these distances during run-time.
-* Add pose feedback in the GNC and path planning module to compoensate for the robot's odometry drift.
+* Functionality to re-plan based on changes in the environment
+* Planner is using hard-coded euclidean distances. It is desired to dynamically update these distances during run-time.
+* Add pose feedback in the GNC and path planning module to compensate for the robot's odometry drift.
