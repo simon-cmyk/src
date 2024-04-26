@@ -1,7 +1,7 @@
 # Overview
 The repository is split into 2 branches. The master branch is created for simulations in the Gazebo environment. The D0042 branch is for executing the AI-planner on the real robot. They differ mainly in map/obstacle definitions, and tuning of the controllers.
 
-Some pictures can be found under [Image section](#images-from-the-project). And there are also videos from the Lab and Gazebo under [Video section](#videos-from-the-project)
+Some pictures can be found under [Image section](#images-from-the-project)  📸. And there are also videos from the Lab and Gazebo under [Video section](#videos-from-the-project)
 
 
 ## Additional packages
@@ -80,7 +80,8 @@ source devel/setup.bash
 roslaunch turtlebot3_bringup turtlebot3_robot.launch
 ```
 
-# Images from the project 📸
+# Images from the project
+
 
 | A* | Hybrid A* |
 |-------|-------|
@@ -92,8 +93,8 @@ roslaunch turtlebot3_bringup turtlebot3_robot.launch
 | Wpts | Taken by Turtlebot |
 | <img src="https://raw.githubusercontent.com/simon-cmyk/src/master/images/tweaked.png" width="250" > | <img src="https://raw.githubusercontent.com/simon-cmyk/src/master/images/waypoint2-25042024_094158.jpg" width="250"> |
 
-# Videos from the project 📹
-These should be clickable links to the videos
+# Videos from the project
+These should be clickable links to the videos 📹
 ### Physical
 [![Video](http://img.youtube.com/vi/De1WzHsptOs/0.jpg)](http://www.youtube.com/watch?v=De1WzHsptOs "AI Planning in Gazebo Simulation")
 
