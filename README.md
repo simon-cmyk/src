@@ -1,48 +1,32 @@
-## Access token
-
-Simon
-
-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
-
-Nicolas
+## Overview
+The repository is split into 2 branches. The master branch is created for simulations in the Gazebo environment. The D0042 branch is for executing the AI-planner on the real robot. They differ mainly in map/obstacle definitions, and tuning of the controllers.
 
 
-Mathias
 
-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
 
-## How to launch Gazebo, TTK4192 assigment map and Turtlebot with manipulator
+### How to launch Gazebo, TTK4192 assignment map and Turtlebot with manipulator
 ```bash
 export TURTLEBOT3_MODEL=waffle_pi
 cd catkin_ws
 source devel/setup.bash
 roslaunch turtlebot3_gazebo turtlebot3_ttk4192.launch
 ```
-### Running log
 
-ctrl + D in gazebo then you can record something.
-
-Playback
-
+### How to launch the Turtlebot with a manipulator in the real environment
 ```bash
-gazebo -u -p /home/ntnu-itk/.gazebo/log/2024-04-09T162920.795934/gzserver/state.log
+ssh user@ip
+export TURTLEBOT3_MODEL=waffle_pi
+cd catkin_ws
+source devel/setup.bash
+roslaunch turtlebot3_bringup turtlebot3_robot.launch
 ```
 
-Spørsmål fredag 12.april
+###
 
-* [Tuesday 10:26 PM] Mathias Normann Knutsen
-Simon; kan du høre på fredag hvordan vi skal løse denne oppgaven?
-[Tuesday 10:26 PM] Mathias Normann Knutsen
-du kan spørre om hvordan "the mission" som skal utføres blir definert med tanke på at vi har et kart fra slam og ikke et static map med kjent origo og kjente wpns
- like 1
+### Known issues
+* Hybrid A* is occasionally failing when computing a path. If so, then A* is implemented as a fallback path planner.
+* The bringup launch file will spawn the robot at position (0,0) at angle 0 which is not in agreement with the internal map of the planner. Added A procedure to manually calibrate the robot before the AI-planner is ran. 
 
-* Må Man gå gjennom alle punktene?
-* Invalid command name timer...
-
-* GNC module handout
-* When can we start with the physical one?
-
-* ideas for reactive implementation? Replanning or? 
-* Lab pc. Can we test on our own? 
-* Reversing the car -> We only give the path -> Leads to funky behaviour.
-Svar: 
+### Desired improvements
+* Add functionality to re-plan based on changes in the environment
+* Planner is using hard-coded euclidean distances in the AI-planner. It is desired to dynamically update these distances during run-time.
