@@ -1,32 +1,16 @@
 #!/usr/bin/env python3
 import rospy
-import os
 import tf
-import numpy as np
-import matplotlib.pyplot as plt
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from math import pi, sqrt, atan2, tan, sin, cos
 from os import system, name
-import re
-import fileinput
-import sys
 import argparse
-from geometry_msgs.msg import PoseStamped
-import random
-import matplotlib.animation as animation
 from datetime import datetime
-from matplotlib.collections import PatchCollection, LineCollection
-from matplotlib.patches import Rectangle
-from itertools import product
-from utils.astar import Astar
 from utils.utils import plot_a_car, get_discretized_thetas, round_theta, same_point
 import cv2
-from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-import shutil
-import copy
 import time
 # Import here the packages used in your codes
 from hybrid_a_star import main_hybrid_a
@@ -34,39 +18,11 @@ from GNC import PosControl
 
 """ ----------------------------------------------------------------------------------
 Mission planner for Autonomos robots: TTK4192,NTNU. 
-Date:20.03.23
+Date:26.04.24
 characteristics: AI planning,GNC, hybrid A*, ROS.
 robot: Turtlebot3
 version: 1.1
 """ 
-
-# 1) Program here your AI planner (only one) ------------------------------------------------------------
-"""
-1) Temporal planner : Program a routine wich call the installed STP planner; 
-2) Graph plan       : Use the graph-plan code provided in the lecture
-3) other algorithm 
-"""
-
-
-# 2) Program here your path-finding algorithm (only one) --------------------------------------------------------------------
-""" 
-1) Hybrid A-star pathfinding : Use the algorithm provided in Assignment 1
-2) A-star                    : Program your code
-3) Other method
-"""
-
-
-        
-#3) GNC module (path-followig and PID controller for the robot) ------------------------------
-"""  Robot Guidance navigation and control module 
-"""
-
-
-
-#4) Program here the turtlebot actions (based in your PDDL domain)
-"""
-Turtlebot 3 actions-------------------------------------------------------------------------
-"""
 
 class TakePhoto:
     def __init__(self):
@@ -113,15 +69,6 @@ def taking_photo_exe():
         rospy.loginfo("Saved image " + img_title)
     else:
         rospy.loginfo("No images received")
-	#eog photo.jpg
-    # Sleep to give the last log messages time to be sent
-
-	# saving photo in a desired directory
-    # file_source = '/home/miguel/catkin_ws/'
-    # file_destination = '/home/miguel/catkin_ws/src/assigment4_ttk4192/scripts'
-    # g='photo'+dt_string+'.jpg'
-
-    # shutil.move(file_source + g, file_destination)
     rospy.sleep(1)
 
 def move_robot_waypoint0_waypoint1():
@@ -231,7 +178,6 @@ class turtle_turn():
         print("Executing Make a turn")
         time.sleep(1)
 
-        # TODO: Turn robot
         self.pid_theta.setPID(1, 0, 0)     # P control while steering
         self.pid_theta.setPoint(self.theta_sp)
         rospy.logwarn("### PID: set target theta = " + str(self.theta_sp) + " ###")

@@ -19,6 +19,12 @@ from utils.utils import animate_solution, get_discretized_thetas, plotstart, rou
  Date: 08.04.24
 --------------------------------------------------------------------
 """
+# Things to tune
+#
+# cell_size, heuristics, angle, max_phi
+#
+
+
 
 class HybridAstar:
     """ Hybrid A* search procedure. """

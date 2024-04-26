@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 import rospy
-import rospkg
 import tf
-import numpy as np
 from nav_msgs.msg import Odometry
-from math import pi, sqrt, atan2, tan, sin, cos
-from os import system, name
+from math import pi
 from datetime import datetime
-from utils.utils import plot_a_car, get_discretized_thetas, round_theta, same_point
 import cv2
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import subprocess
 import time
-from hybrid_a_star import HybridAstar, main_hybrid_a
+from hybrid_a_star import main_hybrid_a
 from GNC import PosControl, turtle_turn
 import actionlib
 import control_msgs.msg
@@ -28,6 +24,7 @@ robot: Turtlebot3 OpenManipulator X
 version: 1.1
 """ 
 
+# Remember to run the script from the correct folder.
 
 class TakePhoto:
     def __init__(self):
@@ -240,7 +237,8 @@ if __name__ == '__main__':
         script_path = '/home/ntnu-itk/catkin_ws/src/AI-planning/run-planner/run_planner.sh'
         subprocess.run(['bash', script_path])
 
-        with open('/home/ntnu-itk/catkin_ws/src/tmp_sas_plan.1', 'r') as file:
+        # Must most likely be verified that the path is correct
+        with open('/home/ntnu-itk/catkin_ws/src/assigment4_ttk4192/scripts/tmp_sas_plan.1', 'r') as file:
             task_total = [task.strip() for task in file]
 
 
