@@ -1,6 +1,8 @@
 ## Overview
 The repository is split into 2 branches. The master branch is created for simulations in the Gazebo environment. The D0042 branch is for executing the AI-planner on the real robot. They differ mainly in map/obstacle definitions, and tuning of the controllers.
 
+Some pictures can be found under [Image section](#images-from-the-project). And there are also videos from the Lab and Gazebo under [Video section](#videos-from-the-project)
+
 
 ### Additional packages
 The STP-planner is an external module not included in the git repository. It must be fetched from the following repository before executing the AI-planne:
@@ -61,7 +63,13 @@ source devel/setup.bash
 roslaunch turtlebot3_bringup turtlebot3_robot.launch
 ```
 
-###
+# Images from the project
+
+Insert images
+
+# Videos from the project
+
+Insert Videos
 
 ### Known issues
 * Hybrid A* is occasionally failing when computing a path. If so, then A* is implemented as a fallback path planner is used.
